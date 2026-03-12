@@ -160,12 +160,11 @@ function fmt(n) {
   return '£' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-const CAT_ORDER  = ['monthly_fixed', 'monthly_estimated', 'fixed_annual', 'epic'];
+const CAT_ORDER  = ['monthly', 'fixed_annual', 'epic'];
 const CAT_LABELS = {
-  monthly_fixed:    'Monthly Fixed',
-  monthly_estimated: 'Monthly Estimated',
-  fixed_annual:     'Fixed Annual',
-  epic:             'Epic Projects',
+  monthly:      'Monthly',
+  fixed_annual: 'Fixed Annual',
+  epic:         'Epic Projects',
 };
 
 function sumByCategory(records, valueFn) {

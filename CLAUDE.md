@@ -23,7 +23,7 @@ records:
   - date: 2025-01-05
     amount: 94.80
     kind: spend
-    category: monthly_estimated
+    category: monthly
     description: Groceries
 ---
 ```
@@ -35,7 +35,7 @@ records:
 | `date` | `YYYY-MM-DD` |
 | `amount` | numeric (no currency symbol) |
 | `kind` | `repeating` \| `committed` \| `spend` |
-| `category` | `epic` \| `fixed_annual` \| `monthly_fixed` \| `monthly_estimated` |
+| `category` | `epic` \| `fixed_annual` \| `monthly` |
 | `description` | free text |
 | `valid_until` | `YYYY-MM-DD` or omitted |
 
@@ -53,8 +53,7 @@ Both `repeating` and `committed` form the committed baseline. Together with `spe
 
 | cost_category | Amount means | Annualised as |
 |---|---|---|
-| `monthly_fixed` | monthly amount | `amount × months_active_in_year` |
-| `monthly_estimated` | monthly amount | `amount × months_active_in_year` |
+| `monthly` | monthly amount | `amount × months_active_in_year` |
 | `fixed_annual` | full annual amount | `amount` (amortised to `amount ÷ 12` per month) |
 | `epic` | total project budget | `amount` (lump sum, not spread) |
 
@@ -62,12 +61,11 @@ Both `repeating` and `committed` form the committed baseline. Together with `spe
 
 A `spend` record for an annual payment coexists with the `repeating,fixed_annual` record: the repeating record drives the amortised budget view; the spend record tracks the real cash outflow.
 
-### cat semantics
+### category semantics
 
 - **epic** — large one-off projects (renovation, holiday)
 - **fixed_annual** — annual fixed costs (insurance, yearly subscriptions)
-- **monthly_fixed** — predictable monthly costs (rent, phone)
-- **monthly_estimated** — committed but variable-amount monthly costs (utilities, heating); ad hoc spend like groceries appears only as `spend` records with no planned counterpart
+- **monthly** — all monthly committed costs, whether fixed (rent, phone) or estimated (utilities, heating); ad hoc spend like groceries appears only as `spend` records with no planned counterpart
 
 ## Dashboard Files
 
