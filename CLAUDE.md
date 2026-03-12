@@ -34,16 +34,18 @@ records:
 |-------|--------|
 | `date` | `YYYY-MM-DD` |
 | `amount` | numeric (no currency symbol) |
-| `kind` | `budget` \| `repeating` \| `spend` |
+| `kind` | `repeating` \| `committed` \| `spend` |
 | `category` | `epic` \| `fixed_annual` \| `monthly_fixed` \| `monthly_estimated` |
 | `description` | free text |
 | `valid_until` | `YYYY-MM-DD` or omitted |
 
 ### kind semantics
 
-- **budget** — declares an allocated budget for a category/period; `until` defines the period end
-- **repeating** — a recurring expense (e.g. rent, subscriptions); `until` is when it stops recurring
-- **spend** — a one-off actual expenditure; `until` omitted
+- **repeating** — automatic recurring cost, known amount (rent, phone, insurance premium)
+- **committed** — earmarked cost, estimated amount, amortised across the year (heating oil, property tax, holiday, epic projects); money is spoken for even if not yet paid
+- **spend** — actual recorded transaction; `valid_until` omitted
+
+Both `repeating` and `committed` form the committed baseline. Together with `spend` they give the full cost picture. There is no discretionary budget concept — unplanned spend simply appears in `spend` records only.
 
 ### Amount interpretation by cost_category
 

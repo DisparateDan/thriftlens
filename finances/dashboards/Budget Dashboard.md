@@ -233,71 +233,60 @@ function renderNavBar(parent, label, onPrev, onNext) {
   next.onclick = onNext;
 }
 
-function renderSummaryCards(parent, budgeted, committed, spent) {
-  const remaining = budgeted - spent;
+function renderSummaryCards(parent, committed, spent) {
+  const total = committed + spent;
   const cols = [
-    { label: 'Committed', value: fmt(committed), positive: null },
-    { label: 'Planned',   value: fmt(budgeted),  positive: null },
-    { label: 'Spent',     value: fmt(spent),     positive: null },
-    { label: 'Remaining', value: fmt(remaining), positive: remaining >= 0 },
+    { label: 'Committed', value: fmt(committed) },
+    { label: 'Spent',     value: fmt(spent)     },
+    { label: 'Total',     value: fmt(total)     },
   ];
   const table = parent.createEl('table', { cls: 'budget-table budget-summary-table' });
   const thead = table.createEl('thead').createEl('tr');
   const tbody = table.createEl('tbody').createEl('tr');
-  cols.forEach(({ label, value, positive }) => {
+  cols.forEach(({ label, value }) => {
     thead.createEl('th', { text: label });
-    const td = tbody.createEl('td', { text: value });
-    if (positive === true)  td.addClass('budget-positive');
-    if (positive === false) td.addClass('budget-negative');
+    tbody.createEl('td', { text: value });
   });
 }
 
-function renderCategoryTable(parent, budgetByCat, committedByCat, spentByCat) {
+function renderCategoryTable(parent, committedByCat, spentByCat) {
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Category', 'Committed', 'Planned', 'Spent', 'Remaining'].forEach(h =>
-    hr.createEl('th', { text: h })
-  );
+  ['Category', 'Committed', 'Spent', 'Total'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
-  let [tB, tC, tS] = [0, 0, 0];
+  let [tC, tS] = [0, 0];
 
   CAT_ORDER.forEach(cat => {
-    const b = budgetByCat[cat] || 0;
     const c = committedByCat[cat] || 0;
     const s = spentByCat[cat] || 0;
-    const rem = b - s;
-    tB += b; tC += c; tS += s;
+    const t = c + s;
+    tC += c; tS += s;
 
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: CAT_LABELS[cat] });
     tr.createEl('td', { text: c ? fmt(c) : '—' });
-    tr.createEl('td', { text: b ? fmt(b) : '—' });
     tr.createEl('td', { text: s ? fmt(s) : '—' });
-    const remTd = tr.createEl('td', { text: b ? fmt(rem) : '—' });
-    if (b) remTd.addClass(rem >= 0 ? 'budget-positive' : 'budget-negative');
+    tr.createEl('td', { text: (c || s) ? fmt(t) : '—' });
   });
 
-  const totRem = tB - tS;
   const tr = table.createEl('tfoot').createEl('tr', { cls: 'budget-total-row' });
   tr.createEl('td', { text: 'Total' });
   tr.createEl('td', { text: fmt(tC) });
-  tr.createEl('td', { text: fmt(tB) });
   tr.createEl('td', { text: fmt(tS) });
-  const remTd = tr.createEl('td', { text: fmt(totRem) });
-  remTd.addClass(totRem >= 0 ? 'budget-positive' : 'budget-negative');
+  tr.createEl('td', { text: fmt(tC + tS) });
 }
 
 function renderCommitmentsTable(parent, records, year) {
-  parent.createEl('div', { text: 'Repeating Commitments', cls: 'budget-section-title' });
+  parent.createEl('div', { text: 'Committed Costs', cls: 'budget-section-title' });
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Description', 'Category', 'Per Month', 'Annual Total'].forEach(h =>
+  ['Description', 'Category', 'Kind', 'Per Month', 'Annual Total'].forEach(h =>
     hr.createEl('th', { text: h })
   );
   const tbody = table.createEl('tbody');
 
   records
-    .filter(r => r.kind === 'repeating')
+    .filter(r => r.kind === 'repeating' || r.kind === 'committed')
     .sort((a, b) => CAT_ORDER.indexOf(a.category) - CAT_ORDER.indexOf(b.category))
     .forEach(r => {
       const monthly = r.category === 'fixed_annual' ? r.amount / 12 : r.amount;
@@ -305,6 +294,7 @@ function renderCommitmentsTable(parent, records, year) {
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.description });
       tr.createEl('td', { text: CAT_LABELS[r.category] });
+      tr.createEl('td', { text: r.kind });
       tr.createEl('td', { text: fmt(monthly) });
       tr.createEl('td', { text: fmt(annual) });
     });
@@ -313,20 +303,17 @@ function renderCommitmentsTable(parent, records, year) {
 function renderAnnual(container, records, year) {
   container.empty();
 
-  const budget    = records.filter(r => r.kind === 'budget');
-  const repeating = records.filter(r => r.kind === 'repeating');
-  const spend     = records.filter(r => r.kind === 'spend');
+  const committed  = records.filter(r => r.kind === 'repeating' || r.kind === 'committed');
+  const spend      = records.filter(r => r.kind === 'spend');
 
-  const budgetByCat    = sumByCategory(budget,    r => annualValue(r, year));
-  const committedByCat = sumByCategory(repeating, r => annualValue(r, year));
+  const committedByCat = sumByCategory(committed, r => annualValue(r, year));
   const spentByCat     = sumByCategory(spend,     r => r.amount);
 
-  const totalBudgeted  = Object.values(budgetByCat).reduce((a, b) => a + b, 0);
   const totalCommitted = Object.values(committedByCat).reduce((a, b) => a + b, 0);
   const totalSpent     = Object.values(spentByCat).reduce((a, b) => a + b, 0);
 
-  renderSummaryCards(container, totalBudgeted, totalCommitted, totalSpent);
-  renderCategoryTable(container, budgetByCat, committedByCat, spentByCat);
+  renderSummaryCards(container, totalCommitted, totalSpent);
+  renderCategoryTable(container, committedByCat, spentByCat);
 }
 
 function renderMonthSpendList(parent, spendRecords) {
@@ -353,15 +340,12 @@ function renderMonth(container, records, year, month) {
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
-  const budget     = records.filter(r => r.kind === 'budget');
-  const repeating  = records.filter(r => r.kind === 'repeating');
+  const committed  = records.filter(r => r.kind === 'repeating' || r.kind === 'committed');
   const monthSpend = spendInMonth(records, year, month);
 
-  const budgetByCat    = sumByCategory(budget,    r => monthlyValue(r, year, month));
-  const committedByCat = sumByCategory(repeating, r => monthlyValue(r, year, month));
+  const committedByCat = sumByCategory(committed,  r => monthlyValue(r, year, month));
   const spentByCat     = sumByCategory(monthSpend, r => r.amount);
 
-  const totalBudget    = Object.values(budgetByCat).reduce((a, b) => a + b, 0);
   const totalCommitted = Object.values(committedByCat).reduce((a, b) => a + b, 0);
   const totalSpent     = Object.values(spentByCat).reduce((a, b) => a + b, 0);
 
@@ -373,8 +357,8 @@ function renderMonth(container, records, year, month) {
     });
   }
 
-  renderSummaryCards(container, totalBudget, totalCommitted, totalSpent);
-  renderCategoryTable(container, budgetByCat, committedByCat, spentByCat);
+  renderSummaryCards(container, totalCommitted, totalSpent);
+  renderCategoryTable(container, committedByCat, spentByCat);
   renderMonthSpendList(container, monthSpend);
 }
 
