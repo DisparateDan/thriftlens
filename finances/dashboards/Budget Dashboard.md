@@ -236,8 +236,8 @@ function renderNavBar(parent, label, onPrev, onNext) {
 function renderSummaryCards(parent, budgeted, committed, spent) {
   const remaining = budgeted - spent;
   const cols = [
-    { label: 'Planned',   value: fmt(budgeted),  positive: null },
     { label: 'Committed', value: fmt(committed), positive: null },
+    { label: 'Planned',   value: fmt(budgeted),  positive: null },
     { label: 'Spent',     value: fmt(spent),     positive: null },
     { label: 'Remaining', value: fmt(remaining), positive: remaining >= 0 },
   ];
@@ -255,7 +255,7 @@ function renderSummaryCards(parent, budgeted, committed, spent) {
 function renderCategoryTable(parent, budgetByCat, committedByCat, spentByCat) {
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Category', 'Planned', 'Committed', 'Spent', 'Remaining'].forEach(h =>
+  ['Category', 'Committed', 'Planned', 'Spent', 'Remaining'].forEach(h =>
     hr.createEl('th', { text: h })
   );
   const tbody = table.createEl('tbody');
@@ -270,8 +270,8 @@ function renderCategoryTable(parent, budgetByCat, committedByCat, spentByCat) {
 
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: CAT_LABELS[cat] });
-    tr.createEl('td', { text: b ? fmt(b) : '—' });
     tr.createEl('td', { text: c ? fmt(c) : '—' });
+    tr.createEl('td', { text: b ? fmt(b) : '—' });
     tr.createEl('td', { text: s ? fmt(s) : '—' });
     const remTd = tr.createEl('td', { text: b ? fmt(rem) : '—' });
     if (b) remTd.addClass(rem >= 0 ? 'budget-positive' : 'budget-negative');
@@ -280,8 +280,8 @@ function renderCategoryTable(parent, budgetByCat, committedByCat, spentByCat) {
   const totRem = tB - tS;
   const tr = table.createEl('tfoot').createEl('tr', { cls: 'budget-total-row' });
   tr.createEl('td', { text: 'Total' });
-  tr.createEl('td', { text: fmt(tB) });
   tr.createEl('td', { text: fmt(tC) });
+  tr.createEl('td', { text: fmt(tB) });
   tr.createEl('td', { text: fmt(tS) });
   const remTd = tr.createEl('td', { text: fmt(totRem) });
   remTd.addClass(totRem >= 0 ? 'budget-positive' : 'budget-negative');
