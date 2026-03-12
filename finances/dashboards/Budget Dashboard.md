@@ -160,10 +160,10 @@ function fmt(n) {
   return '£' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-const CAT_ORDER  = ['monthly_fixed', 'monthly_variable', 'fixed_annual', 'epic'];
+const CAT_ORDER  = ['monthly_fixed', 'monthly_estimated', 'fixed_annual', 'epic'];
 const CAT_LABELS = {
   monthly_fixed:    'Monthly Fixed',
-  monthly_variable: 'Monthly Variable',
+  monthly_estimated: 'Monthly Estimated',
   fixed_annual:     'Fixed Annual',
   epic:             'Epic Projects',
 };
@@ -236,7 +236,7 @@ function renderNavBar(parent, label, onPrev, onNext) {
 function renderSummaryCards(parent, budgeted, committed, spent) {
   const remaining = budgeted - spent;
   const cols = [
-    { label: 'Budgeted',  value: fmt(budgeted),  positive: null },
+    { label: 'Planned',   value: fmt(budgeted),  positive: null },
     { label: 'Committed', value: fmt(committed), positive: null },
     { label: 'Spent',     value: fmt(spent),     positive: null },
     { label: 'Remaining', value: fmt(remaining), positive: remaining >= 0 },
@@ -255,7 +255,7 @@ function renderSummaryCards(parent, budgeted, committed, spent) {
 function renderCategoryTable(parent, budgetByCat, committedByCat, spentByCat) {
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Category', 'Budgeted', 'Committed', 'Spent', 'Remaining'].forEach(h =>
+  ['Category', 'Planned', 'Committed', 'Spent', 'Remaining'].forEach(h =>
     hr.createEl('th', { text: h })
   );
   const tbody = table.createEl('tbody');

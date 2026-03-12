@@ -23,7 +23,7 @@ records:
   - date: 2025-01-05
     amount: 94.80
     kind: spend
-    category: monthly_variable
+    category: monthly_estimated
     description: Groceries
 ---
 ```
@@ -35,7 +35,7 @@ records:
 | `date` | `YYYY-MM-DD` |
 | `amount` | numeric (no currency symbol) |
 | `kind` | `budget` \| `repeating` \| `spend` |
-| `category` | `epic` \| `fixed_annual` \| `monthly_fixed` \| `monthly_variable` |
+| `category` | `epic` \| `fixed_annual` \| `monthly_fixed` \| `monthly_estimated` |
 | `description` | free text |
 | `valid_until` | `YYYY-MM-DD` or omitted |
 
@@ -52,7 +52,7 @@ records:
 | cost_category | Amount means | Annualised as |
 |---|---|---|
 | `monthly_fixed` | monthly amount | `amount × months_active_in_year` |
-| `monthly_variable` | monthly amount | `amount × months_active_in_year` |
+| `monthly_estimated` | monthly amount | `amount × months_active_in_year` |
 | `fixed_annual` | full annual amount | `amount` (amortised to `amount ÷ 12` per month) |
 | `epic` | total project budget | `amount` (lump sum, not spread) |
 
@@ -65,7 +65,7 @@ A `spend` record for an annual payment coexists with the `repeating,fixed_annual
 - **epic** — large one-off projects (renovation, holiday)
 - **fixed_annual** — annual fixed costs (insurance, yearly subscriptions)
 - **monthly_fixed** — predictable monthly costs (rent, phone)
-- **monthly_variable** — fluctuating monthly costs (groceries, utilities)
+- **monthly_estimated** — committed but variable-amount monthly costs (utilities, heating); ad hoc spend like groceries appears only as `spend` records with no planned counterpart
 
 ## Dashboard Files
 
