@@ -72,18 +72,18 @@
   color: var(--text-muted);
   font-weight: 500;
   font-size: 0.85em;
-  border-bottom: 1px solid var(--background-modifier-border);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 .budget-dashboard .budget-table td {
   text-align: right;
   padding: 0.45em 0.75em;
-  border-bottom: 1px solid var(--background-modifier-border-subtle, var(--background-modifier-border));
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 .budget-dashboard .budget-table th:first-child,
 .budget-dashboard .budget-table td:first-child { text-align: left; }
 .budget-dashboard .budget-total-row td {
   font-weight: 600;
-  border-top: 2px solid var(--background-modifier-border);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
   border-bottom: none;
 }
 .budget-dashboard .budget-summary-table td {
@@ -212,7 +212,7 @@ function parseRecordsBlock(text) {
 }
 
 async function loadYear(year) {
-  const page = dv.pages('"vault/budget"')
+  const page = dv.pages('"budget"')
     .where(p => p.budget_record && p.year === year)
     .first();
   if (!page) return [];
@@ -377,46 +377,55 @@ const state = {
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
 
-// loadYear is now synchronous so no cache needed
+// Inject styles via JS — more reliable than a markdown <style> tag in Obsidian
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+  .budget-dashboard .budget-table th { border: 1px solid rgba(255,255,255,0.3) !important; }
+  .budget-dashboard .budget-table td { border: 1px solid rgba(255,255,255,0.15) !important; }
+`;
+document.head.appendChild(styleEl);
+
 const root = dv.container;
 root.addClass('budget-dashboard');
 
-const HEADER_STYLE  = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:1em;padding-bottom:0.75em;border-bottom:2px solid var(--background-modifier-border)';
-const TITLE_STYLE   = 'font-size:1.3em;font-weight:700;margin:0';
+const HEADER_STYLE       = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:1em;padding-bottom:0.75em;border-bottom:2px solid var(--background-modifier-border)';
+const INNER_HEADER_STYLE = 'margin-bottom:0.75em;padding-bottom:0.5em;border-bottom:1px solid var(--background-modifier-border)';
+const TITLE_STYLE        = 'font-size:1.3em;font-weight:700;margin:0';
+const INNER_TITLE_STYLE  = 'font-size:1em;font-weight:600;margin:0;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em';
 
-const monthSection  = root.createEl('div', { cls: 'budget-section' });
-const monthHeader   = monthSection.createEl('div', { attr: { style: HEADER_STYLE } });
-monthHeader.createEl('div', { text: 'Monthly View', attr: { style: TITLE_STYLE } });
-const monthNav      = monthHeader.createEl('div');
-const monthContent  = monthSection.createEl('div');
+// Outer monthly wrapper
+const monthlyOuter       = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em' } });
+const monthlyOuterHeader = monthlyOuter.createEl('div', { attr: { style: HEADER_STYLE } });
+monthlyOuterHeader.createEl('div', { text: 'Monthly View', attr: { style: TITLE_STYLE } });
+const monthNav           = monthlyOuterHeader.createEl('div');
 
-const commitSection = root.createEl('div', { cls: 'budget-section' });
-const commitHeader  = commitSection.createEl('div', { attr: { style: HEADER_STYLE } });
-commitHeader.createEl('div', { text: 'Repeating Commitments', attr: { style: TITLE_STYLE } });
-const commitNav     = commitHeader.createEl('div');
-const commitContent = commitSection.createEl('div');
+// Inner: Snapshot
+const snapshotSection = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
+snapshotSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+  .createEl('span', { text: 'Snapshot', attr: { style: INNER_TITLE_STYLE } });
+const monthContent    = snapshotSection.createEl('div');
 
-const annualSection = root.createEl('div', { cls: 'budget-section' });
-const annualHeader  = annualSection.createEl('div', { attr: { style: HEADER_STYLE } });
+// Inner: Repeating Monthly Commitments
+const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+  .createEl('span', { text: 'Repeating Monthly Commitments', attr: { style: INNER_TITLE_STYLE } });
+const commitContent   = commitSection.createEl('div');
+
+// Annual
+const annualSection  = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.18)' } });
+const annualHeader   = annualSection.createEl('div', { attr: { style: HEADER_STYLE } });
 annualHeader.createEl('div', { text: 'Annual View', attr: { style: TITLE_STYLE } });
-const annualNav     = annualHeader.createEl('div');
-const annualContent = annualSection.createEl('div');
+const annualNav      = annualHeader.createEl('div');
+const annualContent  = annualSection.createEl('div');
 
 async function refreshAnnual() {
   const records = await loadYear(state.annualYear);
   annualNav.empty();
-  commitNav.empty();
   renderNavBar(annualNav, String(state.annualYear),
     () => { state.annualYear--; refreshAnnual(); },
     () => { state.annualYear++; refreshAnnual(); }
   );
-  renderNavBar(commitNav, String(state.annualYear),
-    () => { state.annualYear--; refreshAnnual(); },
-    () => { state.annualYear++; refreshAnnual(); }
-  );
   renderAnnual(annualContent, records, state.annualYear);
-  commitContent.empty();
-  renderCommitmentsTable(commitContent, records, state.annualYear);
 }
 
 async function refreshMonth() {
@@ -435,6 +444,8 @@ async function refreshMonth() {
     }
   );
   renderMonth(monthContent, records, state.monthYear, state.month);
+  commitContent.empty();
+  renderCommitmentsTable(commitContent, records, state.monthYear);
 }
 
 await refreshAnnual();

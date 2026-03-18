@@ -72,7 +72,7 @@ A `spend` record for an annual payment coexists with the `repeating,fixed_annual
 DataviewJS dashboards live at `vault/dashboards/`. Records are read directly from frontmatter — no parsing needed:
 
 ```js
-const page = dv.pages('"vault/budget"').where(p => p.budget_record && p.year === year).first();
+const page = dv.pages('"budget"').where(p => p.budget_record && p.year === year).first();
 const records = page.records; // already a JS array from YAML
 ```
 
