@@ -270,11 +270,11 @@ function renderCategoryTable(parent, committedByCat, spentByCat) {
     tr.createEl('td', { text: (c || s) ? fmt(t) : '—' });
   });
 
-  const tr = table.createEl('tfoot').createEl('tr', { cls: 'budget-total-row' });
-  tr.createEl('td', { text: 'Total' });
-  tr.createEl('td', { text: fmt(tC) });
-  tr.createEl('td', { text: fmt(tS) });
-  tr.createEl('td', { text: fmt(tC + tS) });
+  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
+  const tr = table.createEl('tfoot').createEl('tr');
+  ['Total', fmt(tC), fmt(tS), fmt(tC + tS)].forEach(val =>
+    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
+  );
 }
 
 function renderCommitmentsTable(parent, records, year) {
@@ -285,6 +285,7 @@ function renderCommitmentsTable(parent, records, year) {
     hr.createEl('th', { text: h })
   );
   const tbody = table.createEl('tbody');
+  let [tMonthly, tAnnual] = [0, 0];
 
   records
     .filter(r => r.kind === 'repeating' || r.kind === 'committed')
@@ -292,6 +293,8 @@ function renderCommitmentsTable(parent, records, year) {
     .forEach(r => {
       const monthly = r.category === 'fixed_annual' ? r.amount / 12 : r.amount;
       const annual  = annualValue(r, year);
+      tMonthly += monthly;
+      tAnnual  += annual;
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.description });
       tr.createEl('td', { text: CAT_LABELS[r.category] });
@@ -299,6 +302,12 @@ function renderCommitmentsTable(parent, records, year) {
       tr.createEl('td', { text: fmt(monthly) });
       tr.createEl('td', { text: fmt(annual) });
     });
+
+  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
+  const tr = table.createEl('tfoot').createEl('tr');
+  ['Total', '', '', fmt(tMonthly), fmt(tAnnual)].forEach(val =>
+    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
+  );
 }
 
 function renderAnnual(container, records, year) {
