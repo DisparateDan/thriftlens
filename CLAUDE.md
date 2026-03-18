@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-An Obsidian vault for personal financial budgeting using DataviewJS dashboards that query structured markdown data files.
+**ThriftLens** — an Obsidian vault for personal financial budgeting using DataviewJS dashboards that query structured markdown data files.
 
 Don't show me any code diffs or code output in the chat stream. I'll check them myself if I want to see.
 
@@ -12,7 +12,7 @@ Don't show me any code diffs or code output in the chat stream. I'll check them 
 
 ### Budget Record Files
 
-- Location: `finances/budget/<year>.md` (one file per year)
+- Location: `vault/budget/<year>.md` (one file per year)
 - Records stored as a YAML list under the `records` key in frontmatter
 
 ```yaml
@@ -69,10 +69,10 @@ A `spend` record for an annual payment coexists with the `repeating,fixed_annual
 
 ## Dashboard Files
 
-DataviewJS dashboards live at `finances/dashboards/`. Records are read directly from frontmatter — no parsing needed:
+DataviewJS dashboards live at `vault/dashboards/`. Records are read directly from frontmatter — no parsing needed:
 
 ```js
-const page = dv.pages('"finances/budget"').where(p => p.budget_record && p.year === year).first();
+const page = dv.pages('"vault/budget"').where(p => p.budget_record && p.year === year).first();
 const records = page.records; // already a JS array from YAML
 ```
 

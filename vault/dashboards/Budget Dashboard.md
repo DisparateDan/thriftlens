@@ -156,8 +156,10 @@ function spendInMonth(records, year, month) {
   );
 }
 
+const CURRENCY = '€';
+
 function fmt(n) {
-  return '£' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return CURRENCY + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 const CAT_ORDER  = ['monthly', 'fixed_annual', 'epic'];
@@ -210,7 +212,7 @@ function parseRecordsBlock(text) {
 }
 
 async function loadYear(year) {
-  const page = dv.pages('"finances/budget"')
+  const page = dv.pages('"vault/budget"')
     .where(p => p.budget_record && p.year === year)
     .first();
   if (!page) return [];
