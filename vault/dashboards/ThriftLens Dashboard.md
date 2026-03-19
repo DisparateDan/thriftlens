@@ -317,7 +317,7 @@ function renderAnnual(container, records, year) {
 
   const table = container.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
   const hr = table.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
 
   rows.forEach(({ label, total, spent }) => {
