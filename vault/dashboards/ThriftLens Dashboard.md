@@ -343,24 +343,25 @@ function renderAnnual(container, records, year) {
     spendByCat[cat] = (spendByCat[cat] || 0) + r.amount;
   });
 
-  container.createEl('div', { text: 'Annual Costs Detail', cls: 'budget-section-title' });
-  const detail = container.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
-  const dhr = detail.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => dhr.createEl('th', { text: h }));
-  const dtbody = detail.createEl('tbody');
-
-  [...committed]
-    .sort((a, b) => CAT_ORDER.indexOf(a.periodicity) - CAT_ORDER.indexOf(b.periodicity))
-    .forEach(r => {
+  function renderDetailTable(parent, subtitle, records) {
+    parent.createEl('div', { text: subtitle, cls: 'budget-section-title' });
+    const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+    const hr = table.createEl('thead').createEl('tr');
+    ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+    const tbody = table.createEl('tbody');
+    records.forEach(r => {
       const total     = annualValue(r, year);
       const spent     = spendByCat[r.spend_category] || 0;
-      const remaining = total - spent;
-      const dtr = dtbody.createEl('tr');
-      dtr.createEl('td', { text: fmtCat(r.spend_category) });
-      dtr.createEl('td', { text: fmt(total) });
-      dtr.createEl('td', { text: spent ? fmt(spent) : '—' });
-      dtr.createEl('td', { text: fmt(remaining) });
+      const tr = tbody.createEl('tr');
+      tr.createEl('td', { text: fmtCat(r.spend_category) });
+      tr.createEl('td', { text: fmt(total) });
+      tr.createEl('td', { text: spent ? fmt(spent) : '—' });
+      tr.createEl('td', { text: fmt(total - spent) });
     });
+  }
+
+  renderDetailTable(container, 'Annual Costs Detail',       committed.filter(r => r.periodicity === 'annual'));
+  renderDetailTable(container, 'Monthly Fixed Costs Detail', committed.filter(r => r.periodicity === 'monthly'));
 }
 
 function renderMonthSpendList(parent, spendRecords) {
