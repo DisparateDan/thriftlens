@@ -299,21 +299,42 @@ function renderCommitmentsTable(parent, records, year) {
 function renderAnnual(container, records, year) {
   container.empty();
 
-  const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const spend      = records.filter(r => r.spend_type === 'unplanned');
+  const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
+  const spend     = records.filter(r => r.spend_type === 'unplanned');
 
-  const committedByCat = sumByCategory(committed, r => annualValue(r, year));
-  const spentByCat     = sumByCategory(spend,     r => r.amount);
+  const rows = [
+    {
+      label:   'Annual Costs',
+      total:   committed.filter(r => r.periodicity === 'annual').reduce((s, r) => s + annualValue(r, year), 0),
+      spent:   spend.filter(r => r.periodicity === 'annual').reduce((s, r) => s + r.amount, 0),
+    },
+    {
+      label:   'Monthly Fixed Costs',
+      total:   committed.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + annualValue(r, year), 0),
+      spent:   spend.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + r.amount, 0),
+    },
+  ];
 
-  const totalCommitted = Object.values(committedByCat).reduce((a, b) => a + b, 0);
-  const totalSpent     = Object.values(spentByCat).reduce((a, b) => a + b, 0);
+  const table = container.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const hr = table.createEl('thead').createEl('tr');
+  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+  const tbody = table.createEl('tbody');
 
-  renderSummaryCards(container, [
-    { label: 'Committed', value: fmt(totalCommitted) },
-    { label: 'Spent',     value: fmt(totalSpent)     },
-    { label: 'Total',     value: fmt(totalCommitted + totalSpent) },
-  ]);
-  renderSpendByCategoryTable(container, spend);
+  rows.forEach(({ label, total, spent }) => {
+    const tr = tbody.createEl('tr');
+    tr.createEl('td', { text: label });
+    tr.createEl('td', { text: fmt(total) });
+    tr.createEl('td', { text: fmt(spent) });
+    tr.createEl('td', { text: fmt(total - spent) });
+  });
+
+  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
+  const tTotal = rows.reduce((s, r) => s + r.total, 0);
+  const tSpent = rows.reduce((s, r) => s + r.spent, 0);
+  const tr = table.createEl('tfoot').createEl('tr');
+  ['Total', fmt(tTotal), fmt(tSpent), fmt(tTotal - tSpent)].forEach(val =>
+    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
+  );
 }
 
 function renderMonthSpendList(parent, spendRecords) {
