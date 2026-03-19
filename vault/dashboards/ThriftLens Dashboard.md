@@ -238,7 +238,7 @@ function renderNavBar(parent, label, onPrev, onNext) {
 }
 
 function renderSummaryCards(parent, cols) {
-  const table = parent.createEl('table', { cls: 'budget-table budget-summary-table' });
+  const table = parent.createEl('table', { cls: 'budget-table budget-summary-table', attr: { style: 'width:100%' } });
   const thead = table.createEl('thead').createEl('tr');
   const tbody = table.createEl('tbody').createEl('tr');
   cols.forEach(({ label, value }) => {
@@ -254,7 +254,7 @@ function renderSpendByCategoryTable(parent, spendRecords) {
     const cat = r.spend_category || '(uncategorised)';
     totals[cat] = (totals[cat] || 0) + r.amount;
   });
-  const table = parent.createEl('table', { cls: 'budget-table' });
+  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
   const hr = table.createEl('thead').createEl('tr');
   ['Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -273,7 +273,7 @@ function renderSpendByCategoryTable(parent, spendRecords) {
 }
 
 function renderCommitmentsTable(parent, records, year) {
-  const table = parent.createEl('table', { cls: 'budget-table' });
+  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
   const hr = table.createEl('thead').createEl('tr');
   ['Description', 'Per Month'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -319,7 +319,7 @@ function renderAnnual(container, records, year) {
 function renderMonthSpendList(parent, spendRecords) {
   if (spendRecords.length === 0) return;
   parent.createEl('div', { text: "This Month's Transactions", cls: 'budget-section-title' });
-  const table = parent.createEl('table', { cls: 'budget-table' });
+  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
   const hr = table.createEl('thead').createEl('tr');
   ['Date', 'Description', 'Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -414,7 +414,7 @@ const monthContent    = snapshotSection.createEl('div');
 // Inner: Repeating Monthly Commitments
 const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
 commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Planned Monthly Costs', attr: { style: INNER_TITLE_STYLE } });
+  .createEl('span', { text: 'Planned Fixed Costs', attr: { style: INNER_TITLE_STYLE } });
 const commitContent   = commitSection.createEl('div');
 
 // Annual
