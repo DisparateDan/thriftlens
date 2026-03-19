@@ -1,38 +1,57 @@
 <style>
+/* ─── Sections ───────────────────────────────────────── */
 .budget-dashboard .budget-section {
-  margin-bottom: 2em;
+  margin-bottom: 1.25em;
   padding: 1em 1.25em;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: 10px;
 }
-.budget-dashboard .budget-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1em;
-  padding-bottom: 0.75em;
-  border-bottom: 2px solid var(--background-modifier-border);
+.budget-dashboard .budget-inner-header {
+  margin-bottom: 0.85em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--background-modifier-border);
 }
+.budget-dashboard .budget-inner-title {
+  font-size: 0.72em;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+.budget-dashboard .budget-section-title {
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-faint);
+  margin: 1.25em 0 0.5em;
+}
+
+/* ─── Nav ────────────────────────────────────────────── */
 .budget-dashboard .budget-nav {
   display: flex;
   align-items: center;
-  gap: 0.75em;
+  gap: 0.6em;
 }
 .budget-dashboard .budget-nav-label {
-  font-size: 1.1em;
+  font-size: 1em;
   font-weight: 600;
-  min-width: 6em;
+  min-width: 8em;
   text-align: center;
 }
 .budget-dashboard .budget-nav-btn {
   background: var(--interactive-normal);
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
-  padding: 0.2em 0.6em;
+  padding: 0.15em 0.55em;
   cursor: pointer;
   font-size: 0.9em;
+  color: var(--text-normal);
 }
 .budget-dashboard .budget-nav-btn:hover { background: var(--interactive-hover); }
+
+/* ─── Summary cards ──────────────────────────────────── */
 .budget-dashboard .budget-cards {
   display: flex;
   gap: 0.75em;
@@ -41,110 +60,63 @@
 }
 .budget-dashboard .budget-card {
   flex: 1;
-  min-width: 110px;
-  padding: 0.6em 0.9em;
-  border-radius: 6px;
+  min-width: 120px;
+  padding: 0.75em 1em;
+  border-radius: 8px;
   border: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  background: var(--background-primary-alt);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 .budget-dashboard .budget-card-label {
-  font-size: 0.75em;
-  color: var(--text-muted);
-  margin-bottom: 0.2em;
+  font-size: 0.68em;
+  color: var(--text-faint);
+  margin-bottom: 0.3em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.07em;
 }
 .budget-dashboard .budget-card-value {
-  font-size: 1.2em;
-  font-weight: 600;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--text-normal);
 }
 .budget-dashboard .budget-positive { color: var(--color-green); }
 .budget-dashboard .budget-negative { color: var(--color-red); }
+
+/* ─── Tables ─────────────────────────────────────────── */
 .budget-dashboard .budget-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9em;
-  margin-bottom: 1.25em;
+  margin-bottom: 0.5em;
 }
-.budget-dashboard .budget-table th {
+.budget-dashboard .budget-table thead th {
   text-align: right;
-  padding: 0.4em 0.75em;
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.85em;
-  border: 1px solid var(--background-modifier-border);
-}
-.budget-dashboard .budget-table td {
-  text-align: right;
-  padding: 0.45em 0.75em;
-  border: 1px solid var(--background-modifier-border-hover);
-}
-.budget-dashboard .budget-table th:first-child,
-.budget-dashboard .budget-table td:first-child { text-align: left; }
-.budget-dashboard .budget-total-row td {
-  font-weight: 600;
-  border-top: 2px solid var(--background-modifier-border);
-  border-bottom: none;
-}
-.budget-dashboard .budget-summary-table td {
-  font-size: 1.2em;
-  font-weight: 600;
-  padding-top: 0.3em;
-  padding-bottom: 0.75em;
-}
-.budget-dashboard .budget-section-heading {
-  font-size: 1.3em;
+  padding: 0.35em 0.75em 0.6em;
+  color: var(--text-faint);
   font-weight: 700;
-  color: var(--text-normal);
-  margin: 0;
-}
-.budget-dashboard .budget-section-title {
-  font-size: 0.8em;
-  font-weight: 600;
+  font-size: 0.72em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin: 1.25em 0 0.5em;
-}
-.budget-dashboard .budget-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-bottom: 1.25em;
-  padding-bottom: 0.75em;
+  letter-spacing: 0.07em;
   border-bottom: 2px solid var(--background-modifier-border);
 }
-.budget-dashboard .budget-toolbar-sep {
-  width: 1px;
-  height: 1.4em;
-  background: var(--background-modifier-border);
-  margin: 0 0.25em;
+.budget-dashboard .budget-table thead th:first-child { text-align: left; }
+.budget-dashboard .budget-table tbody td {
+  text-align: right;
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
 }
-.budget-dashboard .budget-toolbar-spacer { flex: 1; }
-.budget-dashboard .budget-tab-btn {
-  padding: 0.35em 1.1em;
-  border-radius: 6px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--interactive-normal);
-  cursor: pointer;
-  font-size: 0.95em;
-  font-weight: 500;
+.budget-dashboard .budget-table tbody td:first-child { text-align: left; }
+.budget-dashboard .budget-table tbody tr:last-child td { border-bottom: none; }
+.budget-dashboard .budget-table tbody tr:hover td { background: var(--background-modifier-hover); }
+.budget-dashboard .budget-table tfoot td {
+  text-align: right;
+  padding: 0.6em 0.75em 0.3em;
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--text-accent);
+  border-top: 2px solid var(--background-modifier-border);
 }
-.budget-dashboard .budget-tab-btn:hover { background: var(--interactive-hover); }
-.budget-dashboard .budget-tab-btn.is-active {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-color: var(--interactive-accent);
-}
-.budget-dashboard .budget-today-btn {
-  padding: 0.2em 0.7em;
-  border-radius: 4px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--interactive-normal);
-  cursor: pointer;
-  font-size: 0.85em;
-}
-.budget-dashboard .budget-today-btn:hover { background: var(--interactive-hover); }
+.budget-dashboard .budget-table tfoot td:first-child { text-align: left; }
 </style>
 
 ```dataviewjs
@@ -293,12 +265,11 @@ function renderNavBar(parent, label, onPrev, onNext) {
 }
 
 function renderSummaryCards(parent, cols) {
-  const table = parent.createEl('table', { cls: 'budget-table budget-summary-table', attr: { style: 'width:100%' } });
-  const thead = table.createEl('thead').createEl('tr');
-  const tbody = table.createEl('tbody').createEl('tr');
+  const wrapper = parent.createEl('div', { cls: 'budget-cards' });
   cols.forEach(({ label, value }) => {
-    thead.createEl('th', { text: label });
-    tbody.createEl('td', { text: value });
+    const card = wrapper.createEl('div', { cls: 'budget-card' });
+    card.createEl('div', { text: label, cls: 'budget-card-label' });
+    card.createEl('div', { text: value,  cls: 'budget-card-value' });
   });
 }
 
@@ -309,7 +280,7 @@ function renderSpendByCategoryTable(parent, spendRecords) {
     const cat = r.spend_category || '(uncategorised)';
     totals[cat] = (totals[cat] || 0) + r.amount;
   });
-  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
   ['Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -320,15 +291,12 @@ function renderSpendByCategoryTable(parent, spendRecords) {
     tr.createEl('td', { text: fmtCat(cat) });
     tr.createEl('td', { text: fmt(amount) });
   });
-  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
   const tr = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(total)].forEach(val =>
-    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
-  );
+  ['Total', fmt(total)].forEach(val => tr.createEl('td', { text: val }));
 }
 
 function renderCommitmentsTable(parent, records, year) {
-  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
   ['Description', 'Per Month'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -344,11 +312,8 @@ function renderCommitmentsTable(parent, records, year) {
       tr.createEl('td', { text: fmt(monthly) });
     });
 
-  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
   const tr = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(tMonthly)].forEach(val =>
-    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
-  );
+  ['Total', fmt(tMonthly)].forEach(val => tr.createEl('td', { text: val }));
 }
 
 function renderAnnual(blueContainer, purpleContainer, records, year) {
@@ -371,7 +336,7 @@ function renderAnnual(blueContainer, purpleContainer, records, year) {
     },
   ];
 
-  const table = blueContainer.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const table = blueContainer.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
   ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -384,13 +349,10 @@ function renderAnnual(blueContainer, purpleContainer, records, year) {
     tr.createEl('td', { text: fmt(total - spent) });
   });
 
-  const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
   const tTotal = rows.reduce((s, r) => s + r.total, 0);
   const tSpent = rows.reduce((s, r) => s + r.spent, 0);
   const tr = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(tTotal), fmt(tSpent), fmt(tTotal - tSpent)].forEach(val =>
-    tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
-  );
+  ['Total', fmt(tTotal), fmt(tSpent), fmt(tTotal - tSpent)].forEach(val => tr.createEl('td', { text: val }));
 
   // Detailed breakdown — one row per committed record
   const spendByCat = {};
@@ -401,7 +363,7 @@ function renderAnnual(blueContainer, purpleContainer, records, year) {
 
   function renderDetailTable(parent, subtitle, records, spentFn) {
     parent.createEl('div', { text: subtitle, cls: 'budget-section-title' });
-    const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+    const table = parent.createEl('table', { cls: 'budget-table' });
     const hr = table.createEl('thead').createEl('tr');
     ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
     const tbody = table.createEl('tbody');
@@ -423,7 +385,7 @@ function renderAnnual(blueContainer, purpleContainer, records, year) {
 function renderMonthSpendList(parent, spendRecords) {
   if (spendRecords.length === 0) return;
   parent.createEl('div', { text: "This Month's Transactions", cls: 'budget-section-title' });
-  const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
   ['Date', 'Description', 'Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -492,8 +454,8 @@ const MONTH_NAMES = ['January','February','March','April','May','June',
 const root = dv.container;
 root.addClass('budget-dashboard');
 
-const INNER_HEADER_STYLE = 'margin-bottom:0.75em;padding-bottom:0.5em;border-bottom:1px solid var(--background-modifier-border)';
-const INNER_TITLE_STYLE  = 'font-size:1em;font-weight:600;margin:0;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em';
+const INNER_HEADER_CLS = 'budget-inner-header';
+const INNER_TITLE_CLS  = 'budget-inner-title';
 
 const TAB_BASE   = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--background-modifier-border);background:var(--interactive-normal);cursor:pointer;font-size:0.95em;font-weight:500;white-space:nowrap';
 const TAB_ACTIVE = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--interactive-accent);background:var(--interactive-accent);color:var(--text-on-accent);cursor:pointer;font-size:0.95em;font-weight:600;white-space:nowrap';
@@ -513,26 +475,26 @@ const monthlyOuter  = root.createEl('div', { cls: 'budget-section', attr: { styl
 const dayInfoEl     = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:0 0 0.75em;text-align:right;display:none' } });
 
 const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
-commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Summary', attr: { style: INNER_TITLE_STYLE } });
+commitSection.createEl('div', { cls: INNER_HEADER_CLS })
+  .createEl('span', { text: 'Summary', cls: INNER_TITLE_CLS });
 const cardsContent    = commitSection.createEl('div');
 commitSection.createEl('div', { text: 'Fixed Costs Detail', cls: 'budget-section-title' });
 const commitContent   = commitSection.createEl('div');
 
 const spendSection    = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
-spendSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Transactions', attr: { style: INNER_TITLE_STYLE } });
+spendSection.createEl('div', { cls: INNER_HEADER_CLS })
+  .createEl('span', { text: 'Transactions', cls: INNER_TITLE_CLS });
 const spendContent    = spendSection.createEl('div');
 
 // Annual outer
 const annualOuter          = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em; display: none' } });
 const annualBlueSection    = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
-annualBlueSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Summary', attr: { style: INNER_TITLE_STYLE } });
+annualBlueSection.createEl('div', { cls: INNER_HEADER_CLS })
+  .createEl('span', { text: 'Summary', cls: INNER_TITLE_CLS });
 const annualBlueContent    = annualBlueSection.createEl('div');
 const annualPurpleSection  = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
-annualPurpleSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Planned Fixed Costs', attr: { style: INNER_TITLE_STYLE } });
+annualPurpleSection.createEl('div', { cls: INNER_HEADER_CLS })
+  .createEl('span', { text: 'Planned Fixed Costs', cls: INNER_TITLE_CLS });
 const annualPurpleContent  = annualPurpleSection.createEl('div');
 
 function showTab(tab) {
