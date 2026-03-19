@@ -517,6 +517,31 @@ const MONTH_NAMES = ['January','February','March','April','May','June',
 const root = dv.container;
 root.addClass('budget-dashboard');
 
+// Inject CSS via JS — more reliable than <style> tag in DataviewJS context
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+  .budget-dashboard .tl-toolbar {
+    display:flex !important; align-items:center; gap:0.75em;
+    padding:0.45em 0.75em; margin-bottom:1.5em;
+    background:var(--background-secondary);
+    border:1px solid var(--background-modifier-border); border-radius:8px;
+  }
+  .budget-dashboard .tl-tab-group { display:flex !important; border:1px solid var(--background-modifier-border); border-radius:6px; overflow:hidden; }
+  .budget-dashboard .tl-tab-btn { padding:0.28em 1.1em; background:transparent; border:none; border-right:1px solid var(--background-modifier-border); cursor:pointer; font-size:0.88em; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+  .budget-dashboard .tl-tab-btn:last-child { border-right:none; }
+  .budget-dashboard .tl-sep { width:1px; height:1.2em; background:var(--background-modifier-border); flex-shrink:0; }
+  .budget-dashboard .tl-spacer { flex:1; }
+  .budget-dashboard .tl-today-btn { padding:0.25em 0.75em; border-radius:5px; border:1px solid var(--background-modifier-border); background:var(--background-primary); cursor:pointer; font-size:0.82em; font-weight:500; flex-shrink:0; }
+  .budget-dashboard .tl-section-blue   { border-left:3px solid rgba(100,140,220,0.7) !important; }
+  .budget-dashboard .tl-section-purple { border-left:3px solid rgba(160,100,220,0.7) !important; }
+  .budget-dashboard .budget-table thead th { background:var(--background-modifier-form-field) !important; }
+  .budget-dashboard .budget-card { box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 8px rgba(0,0,0,0.04) !important; }
+  .budget-dashboard .budget-card-value { font-variant-numeric:tabular-nums; }
+  .budget-dashboard .budget-table tbody td { font-variant-numeric:tabular-nums; }
+  .budget-dashboard .budget-table tfoot td { font-variant-numeric:tabular-nums; }
+`;
+document.head.appendChild(styleEl);
+
 const INNER_HEADER_CLS = 'budget-inner-header';
 const INNER_TITLE_CLS  = 'budget-inner-title';
 
