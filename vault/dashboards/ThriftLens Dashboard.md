@@ -72,18 +72,18 @@
   color: var(--text-muted);
   font-weight: 500;
   font-size: 0.85em;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--background-modifier-border);
 }
 .budget-dashboard .budget-table td {
   text-align: right;
   padding: 0.45em 0.75em;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--background-modifier-border-hover);
 }
 .budget-dashboard .budget-table th:first-child,
 .budget-dashboard .budget-table td:first-child { text-align: left; }
 .budget-dashboard .budget-total-row td {
   font-weight: 600;
-  border-top: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid var(--background-modifier-border);
   border-bottom: none;
 }
 .budget-dashboard .budget-summary-table td {
@@ -488,13 +488,6 @@ const state = {
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
 
-// Inject styles via JS — more reliable than a markdown <style> tag in Obsidian
-const styleEl = document.createElement('style');
-styleEl.textContent = `
-  .budget-dashboard .budget-table th { border: 1px solid rgba(255,255,255,0.3) !important; }
-  .budget-dashboard .budget-table td { border: 1px solid rgba(255,255,255,0.15) !important; }
-`;
-document.head.appendChild(styleEl);
 
 const root = dv.container;
 root.addClass('budget-dashboard');
