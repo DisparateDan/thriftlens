@@ -1,0 +1,374 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ThriftLens — styles.css
+   All selectors scoped to .tl-dashboard (ItemView root) or
+   .tl-carry-modal (CarryForward modal) to avoid leaking into the vault.
+   No !important — proper plugin CSS loads cleanly without it.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Toolbar ──────────────────────────────────────────────────── */
+
+.tl-dashboard .tl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.45em 0.75em;
+  margin-bottom: 1.5em;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  flex-wrap: nowrap;
+}
+
+.tl-dashboard .tl-tab-group {
+  display: flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.tl-dashboard .tl-tab-btn {
+  padding: 0.28em 1.1em;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  font-size: 0.88em;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tl-dashboard .tl-tab-btn:last-child {
+  border-right: none;
+}
+
+.tl-dashboard .tl-tab-btn--active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: 700;
+}
+
+.tl-dashboard .tl-sep {
+  width: 1px;
+  height: 1.2em;
+  background: var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.tl-dashboard .tl-spacer {
+  flex: 1;
+}
+
+.tl-dashboard .tl-nav-slot {
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tl-dashboard .tl-add-btn {
+  padding: 0.25em 0.75em;
+  border-radius: 5px;
+  border: 1px solid var(--interactive-accent);
+  background: transparent;
+  color: var(--interactive-accent);
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.tl-dashboard .tl-add-btn:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tl-dashboard .tl-today-btn {
+  padding: 0.25em 0.75em;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--text-normal);
+  flex-shrink: 0;
+}
+
+.tl-dashboard .tl-today-btn:hover {
+  background: var(--interactive-hover);
+}
+
+/* ─── Nav ──────────────────────────────────────────────────────── */
+
+.tl-dashboard .tl-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.tl-dashboard .tl-nav-label {
+  font-size: 0.95em;
+  font-weight: 600;
+  min-width: 8.5em;
+  text-align: center;
+  color: var(--text-normal);
+}
+
+.tl-dashboard .tl-nav-btn {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  padding: 0.12em 0.55em;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.tl-dashboard .tl-nav-btn:hover {
+  background: var(--interactive-hover);
+  color: var(--text-normal);
+}
+
+/* ─── Day info ─────────────────────────────────────────────────── */
+
+.tl-dashboard .tl-day-info {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin: 0 0 0.75em;
+  text-align: right;
+}
+
+/* ─── Sections ─────────────────────────────────────────────────── */
+
+.tl-dashboard .tl-section {
+  margin-bottom: 1.25em;
+  padding: 1em 1.25em;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+}
+
+.tl-dashboard .tl-section--blue {
+  border-left: 3px solid rgba(100, 140, 220, 0.65);
+}
+
+.tl-dashboard .tl-section--purple {
+  border-left: 3px solid rgba(160, 100, 220, 0.65);
+}
+
+.tl-dashboard .tl-section-header {
+  margin-bottom: 0.85em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tl-dashboard .tl-section-title {
+  font-size: 0.7em;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.tl-dashboard .tl-subsection-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  margin: 1.25em 0 0.5em;
+}
+
+/* ─── Summary table ────────────────────────────────────────────── */
+
+.tl-dashboard .tl-summary-table {
+  margin-bottom: 1.25em;
+}
+
+.tl-dashboard .tl-summary-table thead th {
+  font-size: 0.68em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-align: center;
+}
+
+.tl-dashboard .tl-summary-table tbody td {
+  font-size: 1.45em;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.55em 1em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  border-bottom: none;
+}
+
+/* ─── Data tables ──────────────────────────────────────────────── */
+
+.tl-dashboard .tl-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  margin-bottom: 0.5em;
+}
+
+.tl-dashboard .tl-table thead th {
+  text-align: right;
+  padding: 0.45em 0.85em;
+  color: var(--text-faint);
+  font-weight: 600;
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--background-modifier-form-field);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tl-dashboard .tl-table thead th:first-child {
+  text-align: left;
+}
+
+.tl-dashboard .tl-table tbody td {
+  text-align: right;
+  padding: 0.5em 0.85em;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl-dashboard .tl-table tbody td:first-child {
+  text-align: left;
+}
+
+.tl-dashboard .tl-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tl-dashboard .tl-table tbody tr:hover td {
+  background: var(--background-modifier-hover);
+}
+
+.tl-dashboard .tl-table tfoot td {
+  text-align: right;
+  padding: 0.65em 0.85em 0.35em;
+  font-weight: 800;
+  font-size: 1.0em;
+  color: var(--text-accent);
+  font-variant-numeric: tabular-nums;
+  border-top: 2px solid var(--background-modifier-border);
+}
+
+.tl-dashboard .tl-table tfoot td:first-child {
+  text-align: left;
+}
+
+/* ─── Carry Forward modal ──────────────────────────────────────── */
+
+.tl-carry-modal .tl-carry-warn {
+  color: var(--text-warning);
+  font-weight: 600;
+}
+
+.tl-carry-modal .tl-carry-intro {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  margin-bottom: 1em;
+}
+
+.tl-carry-modal .tl-carry-list {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.75em;
+}
+
+.tl-carry-modal .tl-carry-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.6em 0.85em;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+.tl-carry-modal .tl-carry-row:last-child {
+  border-bottom: none;
+}
+
+.tl-carry-modal .tl-carry-row--discretionary {
+  background: var(--background-modifier-hover);
+  opacity: 0.85;
+}
+
+.tl-carry-modal .tl-carry-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  min-width: 0;
+}
+
+.tl-carry-modal .tl-carry-desc {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tl-carry-modal .tl-carry-origin {
+  font-size: 0.72em;
+  color: var(--text-faint);
+  font-style: italic;
+}
+
+.tl-carry-modal .tl-carry-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  flex-shrink: 0;
+}
+
+.tl-carry-modal .tl-carry-amount {
+  width: 7em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 0.25em 0.5em;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 0.9em;
+}
+
+.tl-carry-modal .tl-carry-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+.tl-carry-modal .tl-carry-del-btn:hover {
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+}
+
+.tl-carry-modal .tl-carry-add-btn {
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  padding: 0.3em 0.75em;
+  cursor: pointer;
+  font-size: 0.82em;
+  color: var(--text-muted);
+  margin-bottom: 1em;
+}
+
+.tl-carry-modal .tl-carry-add-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
