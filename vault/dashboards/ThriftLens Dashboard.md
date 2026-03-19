@@ -55,6 +55,7 @@
   padding: 1em 1.25em;
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
+  background: var(--background-secondary);
 }
 .budget-dashboard .tl-section-blue   { border-left: 3px solid rgba(100, 140, 220, 0.6); }
 .budget-dashboard .tl-section-purple { border-left: 3px solid rgba(160, 100, 220, 0.6); }
@@ -107,37 +108,26 @@
   color: var(--text-normal);
 }
 
-/* ─── Summary cards ──────────────────────────────────── */
-.budget-dashboard .budget-cards {
-  display: flex;
-  gap: 0.75em;
+/* ─── Summary table ──────────────────────────────────── */
+.budget-dashboard .budget-summary-table {
   margin-bottom: 1.25em;
-  flex-wrap: wrap;
 }
-.budget-dashboard .budget-card {
-  flex: 1;
-  min-width: 130px;
-  padding: 0.85em 1.1em;
-  border-radius: 8px;
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04);
-}
-.budget-dashboard .budget-card-label {
-  font-size: 0.65em;
-  color: var(--text-faint);
-  margin-bottom: 0.4em;
+.budget-dashboard .budget-summary-table thead th {
+  font-size: 0.68em !important;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  color: var(--text-faint) !important;
   font-weight: 600;
+  text-align: center !important;
 }
-.budget-dashboard .budget-card-value {
-  font-size: 1.5em;
+.budget-dashboard .budget-summary-table tbody td {
+  font-size: 1.45em;
   font-weight: 800;
-  color: var(--text-normal);
+  text-align: center !important;
+  padding: 0.55em 1em !important;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  border-bottom: none !important;
 }
 .budget-dashboard .budget-positive { color: var(--color-green); }
 .budget-dashboard .budget-negative { color: var(--color-red); }
@@ -145,6 +135,7 @@
 /* ─── Tables ─────────────────────────────────────────── */
 .budget-dashboard .budget-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.9em;
   margin-bottom: 0.5em;
@@ -328,11 +319,12 @@ function renderNavBar(parent, label, onPrev, onNext) {
 }
 
 function renderSummaryCards(parent, cols) {
-  const wrapper = parent.createEl('div', { cls: 'budget-cards' });
+  const table = parent.createEl('table', { cls: 'budget-table budget-summary-table' });
+  const thead = table.createEl('thead').createEl('tr');
+  const tbody = table.createEl('tbody').createEl('tr');
   cols.forEach(({ label, value }) => {
-    const card = wrapper.createEl('div', { cls: 'budget-card' });
-    card.createEl('div', { text: label, cls: 'budget-card-label' });
-    card.createEl('div', { text: value,  cls: 'budget-card-value' });
+    thead.createEl('th', { text: label });
+    tbody.createEl('td', { text: value });
   });
 }
 
@@ -535,8 +527,9 @@ styleEl.textContent = `
   .budget-dashboard .tl-section-blue   { border-left:3px solid rgba(100,140,220,0.7) !important; }
   .budget-dashboard .tl-section-purple { border-left:3px solid rgba(160,100,220,0.7) !important; }
   .budget-dashboard .budget-table thead th { background:var(--background-modifier-form-field) !important; }
-  .budget-dashboard .budget-card { box-shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 8px rgba(0,0,0,0.04) !important; }
-  .budget-dashboard .budget-card-value { font-variant-numeric:tabular-nums; }
+  .budget-dashboard .budget-section { background:var(--background-secondary) !important; }
+  .budget-dashboard .budget-table { table-layout:fixed !important; width:100% !important; }
+  .budget-dashboard .budget-summary-table tbody td { font-variant-numeric:tabular-nums; }
   .budget-dashboard .budget-table tbody td { font-variant-numeric:tabular-nums; }
   .budget-dashboard .budget-table tfoot td { font-variant-numeric:tabular-nums; }
 `;
