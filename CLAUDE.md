@@ -37,19 +37,19 @@ year: 2025
 |-------|--------|
 | `date` | `YYYY-MM-DD` |
 | `amount` | numeric (no currency symbol) |
-| `spend_type` | `planned_known` \| `planned_estimate` \| `unplanned` |
+| `spend_type` | `planned_known` \| `planned_estimate` \| `actual_spend` |
 | `periodicity` | `monthly` \| `annual` |
 | `description` | free text |
-| `valid_until` | `YYYY-MM-DD` or omitted |
+| `valid_until` | `YYYY-MM-DD` (omitted by default; only present for mid-year expiry) |
 | `spend_category` | short slug grouping related records across spend types (e.g. `heating_oil`, `rent`) |
 
 ### spend_type semantics
 
 - **planned_known** — recurring cost with a known amount (rent, phone, insurance premium)
 - **planned_estimate** — earmarked cost with an estimated amount (heating oil, property tax, holiday, projects); money is spoken for even if not yet paid
-- **unplanned** — actual recorded transaction with no prior planned counterpart; `valid_until` omitted
+- **actual_spend** — actual recorded transaction (whether realising a planned expense or genuinely ad-hoc); `valid_until` omitted
 
-Both `planned_known` and `planned_estimate` form the planned baseline. Together with `unplanned` they give the full cost picture. There is no discretionary budget concept — ad hoc spend simply appears as `unplanned` records only.
+Both `planned_known` and `planned_estimate` form the planned baseline. Together with `actual_spend` they give the full cost picture. There is no discretionary budget concept — ad hoc spend simply appears as `actual_spend` records only.
 
 ### Amount interpretation by periodicity
 
@@ -62,7 +62,7 @@ Both `planned_known` and `planned_estimate` form the planned baseline. Together 
 
 `spend` records are always taken at face value — no multiplication.
 
-An annual `unplanned` record coexists with its `planned_known,annual` counterpart: the planned record drives the amortised committed view; the unplanned record tracks the real cash outflow. They share the same `spend_category`.
+An annual `actual_spend` record coexists with its `planned_known,annual` counterpart: the planned record drives the amortised committed view; the actual_spend record tracks the real cash outflow. They share the same `spend_category`.
 
 ### periodicity semantics
 
@@ -73,16 +73,16 @@ An annual `unplanned` record coexists with its `planned_known,annual` counterpar
 
 Every record carries a `spend_category` slug (e.g. `heating_oil`, `rent`, `groceries`). This enables grouping and comparison across spend types without fuzzy description matching:
 
-- Actual spend for a category: sum `unplanned` records with that `spend_category`
+- Actual spend for a category: sum `actual_spend` records with that `spend_category`
 - Budget for a category: the `planned_estimate` or `planned_known` record with the same `spend_category`
-- Carry-forward: annual `planned_known` records are seeded from the prior year's `unplanned` total for the same `spend_category`
+- Carry-forward: annual `planned_known` records are seeded from the prior year's `actual_spend` total for the same `spend_category`
 
 ### Carry-forward behaviour
 
 | spend_type + periodicity | New year behaviour |
 |---|---|
 | `planned_known` + `monthly` | Clone record into new year's file as-is |
-| `planned_known` + `annual` | Create new record; seed amount from prior year's `unplanned` total for same `spend_category` |
+| `planned_known` + `annual` | Create new record; seed amount from prior year's `actual_spend` total for same `spend_category` |
 | `planned_estimate` | Always entered explicitly; never auto-carried |
 
 ## Dashboard Files

@@ -106,6 +106,45 @@
   color: var(--text-muted);
   margin: 1.25em 0 0.5em;
 }
+.budget-dashboard .budget-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 1.25em;
+  padding-bottom: 0.75em;
+  border-bottom: 2px solid var(--background-modifier-border);
+}
+.budget-dashboard .budget-toolbar-sep {
+  width: 1px;
+  height: 1.4em;
+  background: var(--background-modifier-border);
+  margin: 0 0.25em;
+}
+.budget-dashboard .budget-toolbar-spacer { flex: 1; }
+.budget-dashboard .budget-tab-btn {
+  padding: 0.35em 1.1em;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  cursor: pointer;
+  font-size: 0.95em;
+  font-weight: 500;
+}
+.budget-dashboard .budget-tab-btn:hover { background: var(--interactive-hover); }
+.budget-dashboard .budget-tab-btn.is-active {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+.budget-dashboard .budget-today-btn {
+  padding: 0.2em 0.7em;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-normal);
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.budget-dashboard .budget-today-btn:hover { background: var(--interactive-hover); }
 </style>
 
 ```dataviewjs
@@ -166,7 +205,7 @@ function monthsToDate(record, year) {
 // Spend records falling within a given year+month (0-indexed).
 function spendInMonth(records, year, month) {
   return records.filter(r =>
-    r.spend_type === 'unplanned' &&
+    r.spend_type === 'actual_spend' &&
     r.date.getFullYear() === year &&
     r.date.getMonth() === month
   );
@@ -312,11 +351,12 @@ function renderCommitmentsTable(parent, records, year) {
   );
 }
 
-function renderAnnual(container, records, year) {
-  container.empty();
+function renderAnnual(blueContainer, purpleContainer, records, year) {
+  blueContainer.empty();
+  purpleContainer.empty();
 
   const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const spend     = records.filter(r => r.spend_type === 'unplanned');
+  const spend     = records.filter(r => r.spend_type === 'actual_spend');
 
   const rows = [
     {
@@ -331,7 +371,7 @@ function renderAnnual(container, records, year) {
     },
   ];
 
-  const table = container.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const table = blueContainer.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
   const hr = table.createEl('thead').createEl('tr');
   ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -376,8 +416,8 @@ function renderAnnual(container, records, year) {
     });
   }
 
-  renderDetailTable(container, 'Annual Costs Detail',        committed.filter(r => r.periodicity === 'annual'),  r => spendByCat[r.spend_category] || 0);
-  renderDetailTable(container, 'Monthly Fixed Costs Detail', committed.filter(r => r.periodicity === 'monthly'), r => monthsToDate(r, year) * r.amount);
+  renderDetailTable(blueContainer,   'Annual Costs Detail',        committed.filter(r => r.periodicity === 'annual'),  r => spendByCat[r.spend_category] || 0);
+  renderDetailTable(purpleContainer, 'Monthly Fixed Costs Detail', committed.filter(r => r.periodicity === 'monthly'), r => monthsToDate(r, year) * r.amount);
 }
 
 function renderMonthSpendList(parent, spendRecords) {
@@ -398,8 +438,9 @@ function renderMonthSpendList(parent, spendRecords) {
     });
 }
 
-function renderMonth(container, dayInfoEl, records, year, month) {
-  container.empty();
+function renderMonth(cardsContainer, spendContainer, dayInfoEl, records, year, month) {
+  cardsContainer.empty();
+  spendContainer.empty();
 
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
@@ -423,13 +464,13 @@ function renderMonth(container, dayInfoEl, records, year, month) {
 
   const annualInstallment = committedByCat.annual  || 0;
   const fixedCosts        = committedByCat.monthly || 0;
-  renderSummaryCards(container, [
+  renderSummaryCards(cardsContainer, [
     { label: 'Annual Costs Installment', value: fmt(annualInstallment) },
     { label: 'Fixed Costs',              value: fmt(fixedCosts)        },
     { label: 'Spend This Month',         value: fmt(totalSpent)        },
     { label: 'Total',                    value: fmt(annualInstallment + fixedCosts + totalSpent) },
   ]);
-  renderMonthSpendList(container, monthSpend);
+  renderMonthSpendList(spendContainer, monthSpend);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -438,9 +479,10 @@ function renderMonth(container, dayInfoEl, records, year, month) {
 
 const now = new Date();
 const state = {
-  annualYear: now.getFullYear(),
-  monthYear:  now.getFullYear(),
+  year:       now.getFullYear(),
   month:      now.getMonth(),   // 0-indexed
+  annualYear: now.getFullYear(),
+  activeTab:  'monthly',
 };
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -457,39 +499,67 @@ document.head.appendChild(styleEl);
 const root = dv.container;
 root.addClass('budget-dashboard');
 
-const HEADER_STYLE       = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:1em;padding-bottom:0.75em;border-bottom:2px solid var(--background-modifier-border)';
 const INNER_HEADER_STYLE = 'margin-bottom:0.75em;padding-bottom:0.5em;border-bottom:1px solid var(--background-modifier-border)';
-const TITLE_STYLE        = 'font-size:1.3em;font-weight:700;margin:0';
 const INNER_TITLE_STYLE  = 'font-size:1em;font-weight:600;margin:0;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em';
 
-// Outer monthly wrapper
-const monthlyOuter       = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em' } });
-const monthlyOuterHeader = monthlyOuter.createEl('div', { attr: { style: HEADER_STYLE } });
-monthlyOuterHeader.createEl('div', { text: 'Monthly View', attr: { style: TITLE_STYLE } });
-const monthNav           = monthlyOuterHeader.createEl('div');
-const dayInfoEl          = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:-0.25em 0 0.75em;text-align:right;display:none' } });
+const TAB_BASE   = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--background-modifier-border);background:var(--interactive-normal);cursor:pointer;font-size:0.95em;font-weight:500;white-space:nowrap';
+const TAB_ACTIVE = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--interactive-accent);background:var(--interactive-accent);color:var(--text-on-accent);cursor:pointer;font-size:0.95em;font-weight:600;white-space:nowrap';
 
-// Inner: Snapshot
-const snapshotSection = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
-snapshotSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Snapshot', attr: { style: INNER_TITLE_STYLE } });
-const monthContent    = snapshotSection.createEl('div');
+// Toolbar: [Monthly] [Annual] | [nav] | [Today]
+const toolbar      = root.createEl('div', { attr: { style: 'display:flex;align-items:center;gap:0.5em;flex-wrap:nowrap;margin-bottom:1.25em;padding-bottom:0.75em;border-bottom:2px solid var(--background-modifier-border)' } });
+const monthTabBtn  = toolbar.createEl('button', { text: 'Monthly', attr: { style: TAB_BASE } });
+const annualTabBtn = toolbar.createEl('button', { text: 'Annual',  attr: { style: TAB_BASE } });
+toolbar.createEl('span', { attr: { style: 'display:inline-block;width:1px;height:1.4em;background:var(--background-modifier-border);margin:0 0.25em;flex-shrink:0' } });
+const monthNav  = toolbar.createEl('div', { attr: { style: 'display:flex;align-items:center;flex-shrink:0' } });
+const annualNav = toolbar.createEl('div', { attr: { style: 'display:none;align-items:center;flex-shrink:0' } });
+toolbar.createEl('div', { attr: { style: 'flex:1' } });
+const todayBtn = toolbar.createEl('button', { text: 'Today', attr: { style: 'padding:0.2em 0.7em;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--interactive-normal);cursor:pointer;font-size:0.85em;flex-shrink:0' } });
 
-// Inner: Repeating Monthly Commitments
-const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+// Monthly outer
+const monthlyOuter  = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em' } });
+const dayInfoEl     = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:0 0 0.75em;text-align:right;display:none' } });
+
+const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
 commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Planned Fixed Costs', attr: { style: INNER_TITLE_STYLE } });
+  .createEl('span', { text: 'Summary', attr: { style: INNER_TITLE_STYLE } });
+const cardsContent    = commitSection.createEl('div');
+commitSection.createEl('div', { text: 'Fixed Costs Detail', cls: 'budget-section-title' });
 const commitContent   = commitSection.createEl('div');
 
-// Annual
-const annualOuter       = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.12); padding: 1em 1.25em' } });
-const annualOuterHeader = annualOuter.createEl('div', { attr: { style: HEADER_STYLE } });
-annualOuterHeader.createEl('div', { text: 'Annual View', attr: { style: TITLE_STYLE } });
-const annualNav         = annualOuterHeader.createEl('div');
-const annualInner       = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.18)' } });
-annualInner.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+const spendSection    = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+spendSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+  .createEl('span', { text: 'Transactions', attr: { style: INNER_TITLE_STYLE } });
+const spendContent    = spendSection.createEl('div');
+
+// Annual outer
+const annualOuter          = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em; display: none' } });
+const annualBlueSection    = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
+annualBlueSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
   .createEl('span', { text: 'Summary', attr: { style: INNER_TITLE_STYLE } });
-const annualContent     = annualInner.createEl('div');
+const annualBlueContent    = annualBlueSection.createEl('div');
+const annualPurpleSection  = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+annualPurpleSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+  .createEl('span', { text: 'Planned Fixed Costs', attr: { style: INNER_TITLE_STYLE } });
+const annualPurpleContent  = annualPurpleSection.createEl('div');
+
+function showTab(tab) {
+  state.activeTab = tab;
+  monthlyOuter.style.display = tab === 'monthly' ? '' : 'none';
+  annualOuter.style.display  = tab === 'annual'  ? '' : 'none';
+  monthNav.style.display     = tab === 'monthly' ? 'flex' : 'none';
+  annualNav.style.display    = tab === 'annual'  ? 'flex' : 'none';
+  monthTabBtn.setAttribute('style', tab === 'monthly' ? TAB_ACTIVE : TAB_BASE);
+  annualTabBtn.setAttribute('style', tab === 'annual'  ? TAB_ACTIVE : TAB_BASE);
+}
+
+monthTabBtn.onclick  = () => showTab('monthly');
+annualTabBtn.onclick = () => showTab('annual');
+todayBtn.onclick     = () => {
+  state.year  = now.getFullYear();
+  state.month = now.getMonth();
+  showTab('monthly');
+  refreshMonth();
+};
 
 async function refreshAnnual() {
   const records = await loadYear(state.annualYear);
@@ -498,29 +568,30 @@ async function refreshAnnual() {
     () => { state.annualYear--; refreshAnnual(); },
     () => { state.annualYear++; refreshAnnual(); }
   );
-  renderAnnual(annualContent, records, state.annualYear);
+  renderAnnual(annualBlueContent, annualPurpleContent, records, state.annualYear);
 }
 
 async function refreshMonth() {
-  const records = await loadYear(state.monthYear);
+  const records = await loadYear(state.year);
   monthNav.empty();
-  renderNavBar(monthNav, `${MONTH_NAMES[state.month]} ${state.monthYear}`,
+  renderNavBar(monthNav, `${MONTH_NAMES[state.month]} ${state.year}`,
     () => {
       state.month--;
-      if (state.month < 0) { state.month = 11; state.monthYear--; }
+      if (state.month < 0) { state.month = 11; state.year--; }
       refreshMonth();
     },
     () => {
       state.month++;
-      if (state.month > 11) { state.month = 0; state.monthYear++; }
+      if (state.month > 11) { state.month = 0; state.year++; }
       refreshMonth();
     }
   );
-  renderMonth(monthContent, dayInfoEl, records, state.monthYear, state.month);
+  renderMonth(cardsContent, spendContent, dayInfoEl, records, state.year, state.month);
   commitContent.empty();
-  renderCommitmentsTable(commitContent, records, state.monthYear);
+  renderCommitmentsTable(commitContent, records, state.year);
 }
 
+showTab('monthly');
 await refreshAnnual();
 await refreshMonth();
 ```
