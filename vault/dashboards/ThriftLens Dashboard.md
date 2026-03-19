@@ -335,6 +335,31 @@ function renderAnnual(container, records, year) {
   ['Total', fmt(tTotal), fmt(tSpent), fmt(tTotal - tSpent)].forEach(val =>
     tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
   );
+
+  // Detailed breakdown — one row per committed record
+  const spendByCat = {};
+  spend.forEach(r => {
+    const cat = r.spend_category || '';
+    spendByCat[cat] = (spendByCat[cat] || 0) + r.amount;
+  });
+
+  const detail = container.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
+  const dhr = detail.createEl('thead').createEl('tr');
+  ['Description', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => dhr.createEl('th', { text: h }));
+  const dtbody = detail.createEl('tbody');
+
+  [...committed]
+    .sort((a, b) => CAT_ORDER.indexOf(a.periodicity) - CAT_ORDER.indexOf(b.periodicity))
+    .forEach(r => {
+      const total     = annualValue(r, year);
+      const spent     = spendByCat[r.spend_category] || 0;
+      const remaining = total - spent;
+      const dtr = dtbody.createEl('tr');
+      dtr.createEl('td', { text: r.description });
+      dtr.createEl('td', { text: fmt(total) });
+      dtr.createEl('td', { text: spent ? fmt(spent) : '—' });
+      dtr.createEl('td', { text: fmt(remaining) });
+    });
 }
 
 function renderMonthSpendList(parent, spendRecords) {
