@@ -1,4 +1,54 @@
 <style>
+/* ─── Toolbar ────────────────────────────────────────── */
+.budget-dashboard .tl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.45em 0.75em;
+  margin-bottom: 1.5em;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+.budget-dashboard .tl-tab-group {
+  display: flex;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.budget-dashboard .tl-tab-btn {
+  padding: 0.28em 1.1em;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+  font-size: 0.88em;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.budget-dashboard .tl-tab-btn:last-child { border-right: none; }
+.budget-dashboard .tl-sep {
+  width: 1px;
+  height: 1.2em;
+  background: var(--background-modifier-border);
+  flex-shrink: 0;
+}
+.budget-dashboard .tl-spacer { flex: 1; }
+.budget-dashboard .tl-today-btn {
+  padding: 0.25em 0.75em;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  cursor: pointer;
+  font-size: 0.82em;
+  color: var(--text-normal);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.budget-dashboard .tl-today-btn:hover { background: var(--interactive-hover); }
+
 /* ─── Sections ───────────────────────────────────────── */
 .budget-dashboard .budget-section {
   margin-bottom: 1.25em;
@@ -6,24 +56,26 @@
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
 }
+.budget-dashboard .tl-section-blue   { border-left: 3px solid rgba(100, 140, 220, 0.6); }
+.budget-dashboard .tl-section-purple { border-left: 3px solid rgba(160, 100, 220, 0.6); }
 .budget-dashboard .budget-inner-header {
   margin-bottom: 0.85em;
   padding-bottom: 0.5em;
   border-bottom: 1px solid var(--background-modifier-border);
 }
 .budget-dashboard .budget-inner-title {
-  font-size: 0.72em;
+  font-size: 0.7em;
   font-weight: 700;
   margin: 0;
   color: var(--text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
 }
 .budget-dashboard .budget-section-title {
-  font-size: 0.72em;
+  font-size: 0.7em;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   color: var(--text-faint);
   margin: 1.25em 0 0.5em;
 }
@@ -32,24 +84,28 @@
 .budget-dashboard .budget-nav {
   display: flex;
   align-items: center;
-  gap: 0.6em;
+  gap: 0.5em;
 }
 .budget-dashboard .budget-nav-label {
-  font-size: 1em;
+  font-size: 0.95em;
   font-weight: 600;
-  min-width: 8em;
+  min-width: 8.5em;
   text-align: center;
-}
-.budget-dashboard .budget-nav-btn {
-  background: var(--interactive-normal);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  padding: 0.15em 0.55em;
-  cursor: pointer;
-  font-size: 0.9em;
   color: var(--text-normal);
 }
-.budget-dashboard .budget-nav-btn:hover { background: var(--interactive-hover); }
+.budget-dashboard .budget-nav-btn {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  padding: 0.12em 0.55em;
+  cursor: pointer;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+.budget-dashboard .budget-nav-btn:hover {
+  background: var(--interactive-hover);
+  color: var(--text-normal);
+}
 
 /* ─── Summary cards ──────────────────────────────────── */
 .budget-dashboard .budget-cards {
@@ -60,24 +116,28 @@
 }
 .budget-dashboard .budget-card {
   flex: 1;
-  min-width: 120px;
-  padding: 0.75em 1em;
+  min-width: 130px;
+  padding: 0.85em 1.1em;
   border-radius: 8px;
   border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary-alt);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  background: var(--background-primary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 8px rgba(0,0,0,0.04);
 }
 .budget-dashboard .budget-card-label {
-  font-size: 0.68em;
+  font-size: 0.65em;
   color: var(--text-faint);
-  margin-bottom: 0.3em;
+  margin-bottom: 0.4em;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
+  font-weight: 600;
 }
 .budget-dashboard .budget-card-value {
-  font-size: 1.4em;
-  font-weight: 700;
+  font-size: 1.5em;
+  font-weight: 800;
   color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 .budget-dashboard .budget-positive { color: var(--color-green); }
 .budget-dashboard .budget-negative { color: var(--color-red); }
@@ -91,29 +151,32 @@
 }
 .budget-dashboard .budget-table thead th {
   text-align: right;
-  padding: 0.35em 0.75em 0.6em;
+  padding: 0.45em 0.85em;
   color: var(--text-faint);
-  font-weight: 700;
-  font-size: 0.72em;
+  font-weight: 600;
+  font-size: 0.7em;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  border-bottom: 2px solid var(--background-modifier-border);
+  letter-spacing: 0.08em;
+  background: var(--background-modifier-form-field);
+  border-bottom: 1px solid var(--background-modifier-border);
 }
 .budget-dashboard .budget-table thead th:first-child { text-align: left; }
 .budget-dashboard .budget-table tbody td {
   text-align: right;
-  padding: 0.5em 0.75em;
+  padding: 0.5em 0.85em;
   border-bottom: 1px solid var(--background-modifier-border-hover);
+  font-variant-numeric: tabular-nums;
 }
 .budget-dashboard .budget-table tbody td:first-child { text-align: left; }
 .budget-dashboard .budget-table tbody tr:last-child td { border-bottom: none; }
 .budget-dashboard .budget-table tbody tr:hover td { background: var(--background-modifier-hover); }
 .budget-dashboard .budget-table tfoot td {
   text-align: right;
-  padding: 0.6em 0.75em 0.3em;
-  font-weight: 700;
-  font-size: 1.05em;
+  padding: 0.65em 0.85em 0.35em;
+  font-weight: 800;
+  font-size: 1.0em;
   color: var(--text-accent);
+  font-variant-numeric: tabular-nums;
   border-top: 2px solid var(--background-modifier-border);
 }
 .budget-dashboard .budget-table tfoot td:first-child { text-align: left; }
@@ -457,45 +520,49 @@ root.addClass('budget-dashboard');
 const INNER_HEADER_CLS = 'budget-inner-header';
 const INNER_TITLE_CLS  = 'budget-inner-title';
 
-const TAB_BASE   = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--background-modifier-border);background:var(--interactive-normal);cursor:pointer;font-size:0.95em;font-weight:500;white-space:nowrap';
-const TAB_ACTIVE = 'padding:0.35em 1.1em;border-radius:6px;border:1px solid var(--interactive-accent);background:var(--interactive-accent);color:var(--text-on-accent);cursor:pointer;font-size:0.95em;font-weight:600;white-space:nowrap';
-
-// Toolbar: [Monthly] [Annual] | [nav] | [Today]
-const toolbar      = root.createEl('div', { attr: { style: 'display:flex;align-items:center;gap:0.5em;flex-wrap:nowrap;margin-bottom:1.25em;padding-bottom:0.75em;border-bottom:2px solid var(--background-modifier-border)' } });
-const monthTabBtn  = toolbar.createEl('button', { text: 'Monthly', attr: { style: TAB_BASE } });
-const annualTabBtn = toolbar.createEl('button', { text: 'Annual',  attr: { style: TAB_BASE } });
-toolbar.createEl('span', { attr: { style: 'display:inline-block;width:1px;height:1.4em;background:var(--background-modifier-border);margin:0 0.25em;flex-shrink:0' } });
+// Toolbar: [Monthly | Annual]  |  [nav]  [Today]
+const toolbar    = root.createEl('div', { cls: 'tl-toolbar', attr: { style: 'display:flex;align-items:center' } });
+const tabGroup   = toolbar.createEl('div', { cls: 'tl-tab-group', attr: { style: 'display:flex' } });
+const monthTabBtn  = tabGroup.createEl('button', { text: 'Monthly', cls: 'tl-tab-btn' });
+const annualTabBtn = tabGroup.createEl('button', { text: 'Annual',  cls: 'tl-tab-btn' });
+toolbar.createEl('div', { cls: 'tl-sep' });
 const monthNav  = toolbar.createEl('div', { attr: { style: 'display:flex;align-items:center;flex-shrink:0' } });
 const annualNav = toolbar.createEl('div', { attr: { style: 'display:none;align-items:center;flex-shrink:0' } });
-toolbar.createEl('div', { attr: { style: 'flex:1' } });
-const todayBtn = toolbar.createEl('button', { text: 'Today', attr: { style: 'padding:0.2em 0.7em;border-radius:4px;border:1px solid var(--background-modifier-border);background:var(--interactive-normal);cursor:pointer;font-size:0.85em;flex-shrink:0' } });
+toolbar.createEl('div', { cls: 'tl-spacer', attr: { style: 'flex:1' } });
+const todayBtn  = toolbar.createEl('button', { text: 'Today', cls: 'tl-today-btn' });
 
-// Monthly outer
-const monthlyOuter  = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em' } });
-const dayInfoEl     = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:0 0 0.75em;text-align:right;display:none' } });
+// Monthly outer (invisible container)
+const monthlyOuter = root.createEl('div');
+const dayInfoEl    = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:0 0 0.75em;text-align:right;display:none' } });
 
-const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
+const commitSection = monthlyOuter.createEl('div', { cls: 'budget-section tl-section-blue' });
 commitSection.createEl('div', { cls: INNER_HEADER_CLS })
   .createEl('span', { text: 'Summary', cls: INNER_TITLE_CLS });
-const cardsContent    = commitSection.createEl('div');
+const cardsContent  = commitSection.createEl('div');
 commitSection.createEl('div', { text: 'Fixed Costs Detail', cls: 'budget-section-title' });
-const commitContent   = commitSection.createEl('div');
+const commitContent = commitSection.createEl('div');
 
-const spendSection    = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+const spendSection  = monthlyOuter.createEl('div', { cls: 'budget-section tl-section-purple' });
 spendSection.createEl('div', { cls: INNER_HEADER_CLS })
   .createEl('span', { text: 'Transactions', cls: INNER_TITLE_CLS });
-const spendContent    = spendSection.createEl('div');
+const spendContent  = spendSection.createEl('div');
 
-// Annual outer
-const annualOuter          = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.12); padding: 1em 1.25em; display: none' } });
-const annualBlueSection    = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
+// Annual outer (invisible container)
+const annualOuter         = root.createEl('div', { attr: { style: 'display:none' } });
+const annualBlueSection   = annualOuter.createEl('div', { cls: 'budget-section tl-section-blue' });
 annualBlueSection.createEl('div', { cls: INNER_HEADER_CLS })
   .createEl('span', { text: 'Summary', cls: INNER_TITLE_CLS });
-const annualBlueContent    = annualBlueSection.createEl('div');
-const annualPurpleSection  = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
+const annualBlueContent   = annualBlueSection.createEl('div');
+const annualPurpleSection = annualOuter.createEl('div', { cls: 'budget-section tl-section-purple' });
 annualPurpleSection.createEl('div', { cls: INNER_HEADER_CLS })
   .createEl('span', { text: 'Planned Fixed Costs', cls: INNER_TITLE_CLS });
-const annualPurpleContent  = annualPurpleSection.createEl('div');
+const annualPurpleContent = annualPurpleSection.createEl('div');
+
+function setTabActive(btn, active) {
+  btn.style.background = active ? 'var(--interactive-accent)' : '';
+  btn.style.color      = active ? 'var(--text-on-accent)'     : '';
+  btn.style.fontWeight = active ? '700'                        : '';
+}
 
 function showTab(tab) {
   state.activeTab = tab;
@@ -503,8 +570,8 @@ function showTab(tab) {
   annualOuter.style.display  = tab === 'annual'  ? '' : 'none';
   monthNav.style.display     = tab === 'monthly' ? 'flex' : 'none';
   annualNav.style.display    = tab === 'annual'  ? 'flex' : 'none';
-  monthTabBtn.setAttribute('style', tab === 'monthly' ? TAB_ACTIVE : TAB_BASE);
-  annualTabBtn.setAttribute('style', tab === 'annual'  ? TAB_ACTIVE : TAB_BASE);
+  setTabActive(monthTabBtn, tab === 'monthly');
+  setTabActive(annualTabBtn, tab === 'annual');
 }
 
 monthTabBtn.onclick  = () => showTab('monthly');
