@@ -147,6 +147,22 @@ function monthlyValue(record, year, month) {
   return record.periodicity === 'annual' ? record.amount / 12 : record.amount;
 }
 
+// Months a record has been active up to and including the current month.
+function monthsToDate(record, year) {
+  const now      = new Date();
+  const nowYear  = now.getFullYear();
+  const nowMonth = now.getMonth();
+  if (year > nowYear) return 0;
+  const effectiveEnd = year < nowYear ? 11 : nowMonth;
+  const yearStart  = new Date(year, 0, 1);
+  const yearEnd    = new Date(year, effectiveEnd, 1);
+  if (record.date > yearEnd) return 0;
+  if (record.valid_until && record.valid_until < yearStart) return 0;
+  const start = record.date > yearStart ? record.date : yearStart;
+  const end   = record.valid_until && record.valid_until < yearEnd ? record.valid_until : yearEnd;
+  return end.getMonth() - start.getMonth() + 1;
+}
+
 // Spend records falling within a given year+month (0-indexed).
 function spendInMonth(records, year, month) {
   return records.filter(r =>
@@ -343,15 +359,15 @@ function renderAnnual(container, records, year) {
     spendByCat[cat] = (spendByCat[cat] || 0) + r.amount;
   });
 
-  function renderDetailTable(parent, subtitle, records) {
+  function renderDetailTable(parent, subtitle, records, spentFn) {
     parent.createEl('div', { text: subtitle, cls: 'budget-section-title' });
     const table = parent.createEl('table', { cls: 'budget-table', attr: { style: 'width:100%' } });
     const hr = table.createEl('thead').createEl('tr');
     ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
     const tbody = table.createEl('tbody');
     records.forEach(r => {
-      const total     = annualValue(r, year);
-      const spent     = spendByCat[r.spend_category] || 0;
+      const total = annualValue(r, year);
+      const spent = spentFn(r);
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: fmtCat(r.spend_category) });
       tr.createEl('td', { text: fmt(total) });
@@ -360,8 +376,8 @@ function renderAnnual(container, records, year) {
     });
   }
 
-  renderDetailTable(container, 'Annual Costs Detail',       committed.filter(r => r.periodicity === 'annual'));
-  renderDetailTable(container, 'Monthly Fixed Costs Detail', committed.filter(r => r.periodicity === 'monthly'));
+  renderDetailTable(container, 'Annual Costs Detail',        committed.filter(r => r.periodicity === 'annual'),  r => spendByCat[r.spend_category] || 0);
+  renderDetailTable(container, 'Monthly Fixed Costs Detail', committed.filter(r => r.periodicity === 'monthly'), r => monthsToDate(r, year) * r.amount);
 }
 
 function renderMonthSpendList(parent, spendRecords) {
