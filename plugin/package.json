@@ -6,7 +6,9 @@
   "scripts": {
     "build": "node esbuild.config.mjs production",
     "dev": "node esbuild.config.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "node esbuild.config.mjs production && node deploy.mjs",
+    "dev:deploy": "node deploy.mjs --watch"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
