@@ -126,9 +126,9 @@ function monthsActiveInYear(record, year) {
 }
 
 // Annualised value of a budget or repeating record.
-// fixed_annual and epic are lump sums; monthly categories scale by months active.
+// annual costs are lump sums (amortised ÷12 per month); monthly costs scale by months active.
 function annualValue(record, year) {
-  if (record.category === 'fixed_annual' || record.category === 'epic') {
+  if (record.periodicity === 'annual') {
     const yearStart = new Date(year, 0, 1);
     const yearEnd   = new Date(year, 11, 31);
     if (record.date > yearEnd) return 0;
@@ -144,13 +144,13 @@ function monthlyValue(record, year, month) {
   const monthEnd   = new Date(year, month + 1, 0);
   if (record.date > monthEnd) return 0;
   if (record.valid_until && record.valid_until < monthStart) return 0;
-  return record.category === 'fixed_annual' ? record.amount / 12 : record.amount;
+  return record.periodicity === 'annual' ? record.amount / 12 : record.amount;
 }
 
 // Spend records falling within a given year+month (0-indexed).
 function spendInMonth(records, year, month) {
   return records.filter(r =>
-    r.kind === 'spend' &&
+    r.spend_type === 'unplanned' &&
     r.date.getFullYear() === year &&
     r.date.getMonth() === month
   );
@@ -162,16 +162,15 @@ function fmt(n) {
   return CURRENCY + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-const CAT_ORDER  = ['monthly', 'fixed_annual', 'epic'];
+const CAT_ORDER  = ['monthly', 'annual'];
 const CAT_LABELS = {
-  monthly:      'Monthly',
-  fixed_annual: 'Fixed Annual',
-  epic:         'Epic Projects',
+  monthly: 'Monthly',
+  annual:  'Annual',
 };
 
 function sumByCategory(records, valueFn) {
   const out = Object.fromEntries(CAT_ORDER.map(c => [c, 0]));
-  records.forEach(r => { if (r.category in out) out[r.category] += valueFn(r); });
+  records.forEach(r => { if (r.periodicity in out) out[r.periodicity] += valueFn(r); });
   return out;
 }
 
@@ -213,7 +212,7 @@ function parseRecordsBlock(text) {
 
 async function loadYear(year) {
   const page = dv.pages('"budget"')
-    .where(p => p.budget_record && p.year === year)
+    .where(p => p.tl_type === 'record' && p.year === year)
     .first();
   if (!page) return [];
   const content = await app.vault.read(app.vault.getAbstractFileByPath(page.file.path));
@@ -288,17 +287,17 @@ function renderCommitmentsTable(parent, records, year) {
   let [tMonthly, tAnnual] = [0, 0];
 
   records
-    .filter(r => r.kind === 'repeating' || r.kind === 'committed')
-    .sort((a, b) => CAT_ORDER.indexOf(a.category) - CAT_ORDER.indexOf(b.category))
+    .filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate')
+    .sort((a, b) => CAT_ORDER.indexOf(a.periodicity) - CAT_ORDER.indexOf(b.periodicity))
     .forEach(r => {
-      const monthly = r.category === 'fixed_annual' ? r.amount / 12 : r.amount;
+      const monthly = r.periodicity === 'annual' ? r.amount / 12 : r.amount;
       const annual  = annualValue(r, year);
       tMonthly += monthly;
       tAnnual  += annual;
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.description });
-      tr.createEl('td', { text: CAT_LABELS[r.category] });
-      tr.createEl('td', { text: r.kind });
+      tr.createEl('td', { text: CAT_LABELS[r.periodicity] });
+      tr.createEl('td', { text: r.spend_type });
       tr.createEl('td', { text: fmt(monthly) });
       tr.createEl('td', { text: fmt(annual) });
     });
@@ -313,8 +312,8 @@ function renderCommitmentsTable(parent, records, year) {
 function renderAnnual(container, records, year) {
   container.empty();
 
-  const committed  = records.filter(r => r.kind === 'repeating' || r.kind === 'committed');
-  const spend      = records.filter(r => r.kind === 'spend');
+  const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
+  const spend      = records.filter(r => r.spend_type === 'unplanned');
 
   const committedByCat = sumByCategory(committed, r => annualValue(r, year));
   const spentByCat     = sumByCategory(spend,     r => r.amount);
@@ -339,7 +338,7 @@ function renderMonthSpendList(parent, spendRecords) {
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) });
       tr.createEl('td', { text: r.description });
-      tr.createEl('td', { text: CAT_LABELS[r.category] || r.category });
+      tr.createEl('td', { text: CAT_LABELS[r.periodicity] || r.periodicity });
       tr.createEl('td', { text: fmt(r.amount) });
     });
 }
@@ -350,7 +349,7 @@ function renderMonth(container, records, year, month) {
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
-  const committed  = records.filter(r => r.kind === 'repeating' || r.kind === 'committed');
+  const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
   const monthSpend = spendInMonth(records, year, month);
 
   const committedByCat = sumByCategory(committed,  r => monthlyValue(r, year, month));
@@ -417,7 +416,7 @@ const monthContent    = snapshotSection.createEl('div');
 // Inner: Repeating Monthly Commitments
 const commitSection   = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(160, 100, 220, 0.18)' } });
 commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
-  .createEl('span', { text: 'Repeating Monthly Commitments', attr: { style: INNER_TITLE_STYLE } });
+  .createEl('span', { text: 'Planned Monthly Costs', attr: { style: INNER_TITLE_STYLE } });
 const commitContent   = commitSection.createEl('div');
 
 // Annual
