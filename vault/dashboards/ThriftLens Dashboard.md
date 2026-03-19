@@ -158,6 +158,10 @@ function spendInMonth(records, year, month) {
 
 const CURRENCY = '€';
 
+function fmtCat(s) {
+  return (s || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function fmt(n) {
   return CURRENCY + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
@@ -233,13 +237,7 @@ function renderNavBar(parent, label, onPrev, onNext) {
   next.onclick = onNext;
 }
 
-function renderSummaryCards(parent, committed, spent) {
-  const total = committed + spent;
-  const cols = [
-    { label: 'Committed', value: fmt(committed) },
-    { label: 'Spent',     value: fmt(spent)     },
-    { label: 'Total',     value: fmt(total)     },
-  ];
+function renderSummaryCards(parent, cols) {
   const table = parent.createEl('table', { cls: 'budget-table budget-summary-table' });
   const thead = table.createEl('thead').createEl('tr');
   const tbody = table.createEl('tbody').createEl('tr');
@@ -249,62 +247,51 @@ function renderSummaryCards(parent, committed, spent) {
   });
 }
 
-function renderCategoryTable(parent, committedByCat, spentByCat) {
+function renderSpendByCategoryTable(parent, spendRecords) {
+  if (spendRecords.length === 0) return;
+  const totals = {};
+  spendRecords.forEach(r => {
+    const cat = r.spend_category || '(uncategorised)';
+    totals[cat] = (totals[cat] || 0) + r.amount;
+  });
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Category', 'Committed', 'Spent', 'Total'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
-  let [tC, tS] = [0, 0];
-
-  CAT_ORDER.forEach(cat => {
-    const c = committedByCat[cat] || 0;
-    const s = spentByCat[cat] || 0;
-    const t = c + s;
-    tC += c; tS += s;
-
+  let total = 0;
+  Object.entries(totals).sort((a, b) => b[1] - a[1]).forEach(([cat, amount]) => {
+    total += amount;
     const tr = tbody.createEl('tr');
-    tr.createEl('td', { text: CAT_LABELS[cat] });
-    tr.createEl('td', { text: c ? fmt(c) : '—' });
-    tr.createEl('td', { text: s ? fmt(s) : '—' });
-    tr.createEl('td', { text: (c || s) ? fmt(t) : '—' });
+    tr.createEl('td', { text: fmtCat(cat) });
+    tr.createEl('td', { text: fmt(amount) });
   });
-
   const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
   const tr = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(tC), fmt(tS), fmt(tC + tS)].forEach(val =>
+  ['Total', fmt(total)].forEach(val =>
     tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
   );
 }
 
 function renderCommitmentsTable(parent, records, year) {
-  parent.createEl('div', { text: 'Committed Costs', cls: 'budget-section-title' });
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
-  ['Description', 'Category', 'Kind', 'Per Month', 'Annual Total'].forEach(h =>
-    hr.createEl('th', { text: h })
-  );
+  ['Description', 'Per Month'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
-  let [tMonthly, tAnnual] = [0, 0];
+  let tMonthly = 0;
 
   records
-    .filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate')
-    .sort((a, b) => CAT_ORDER.indexOf(a.periodicity) - CAT_ORDER.indexOf(b.periodicity))
+    .filter(r => (r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate') && r.periodicity === 'monthly')
     .forEach(r => {
-      const monthly = r.periodicity === 'annual' ? r.amount / 12 : r.amount;
-      const annual  = annualValue(r, year);
+      const monthly = r.amount;
       tMonthly += monthly;
-      tAnnual  += annual;
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.description });
-      tr.createEl('td', { text: CAT_LABELS[r.periodicity] });
-      tr.createEl('td', { text: r.spend_type });
       tr.createEl('td', { text: fmt(monthly) });
-      tr.createEl('td', { text: fmt(annual) });
     });
 
   const TOTAL_STYLE = 'font-weight:700;font-size:1.05em;color:var(--color-accent);border-top:2px solid rgba(255,255,255,0.4)';
   const tr = table.createEl('tfoot').createEl('tr');
-  ['Total', '', '', fmt(tMonthly), fmt(tAnnual)].forEach(val =>
+  ['Total', fmt(tMonthly)].forEach(val =>
     tr.createEl('td', { text: val, attr: { style: TOTAL_STYLE } })
   );
 }
@@ -321,13 +308,17 @@ function renderAnnual(container, records, year) {
   const totalCommitted = Object.values(committedByCat).reduce((a, b) => a + b, 0);
   const totalSpent     = Object.values(spentByCat).reduce((a, b) => a + b, 0);
 
-  renderSummaryCards(container, totalCommitted, totalSpent);
-  renderCategoryTable(container, committedByCat, spentByCat);
+  renderSummaryCards(container, [
+    { label: 'Committed', value: fmt(totalCommitted) },
+    { label: 'Spent',     value: fmt(totalSpent)     },
+    { label: 'Total',     value: fmt(totalCommitted + totalSpent) },
+  ]);
+  renderSpendByCategoryTable(container, spend);
 }
 
 function renderMonthSpendList(parent, spendRecords) {
   if (spendRecords.length === 0) return;
-  parent.createEl('div', { text: 'Transactions', cls: 'budget-section-title' });
+  parent.createEl('div', { text: "This Month's Transactions", cls: 'budget-section-title' });
   const table = parent.createEl('table', { cls: 'budget-table' });
   const hr = table.createEl('thead').createEl('tr');
   ['Date', 'Description', 'Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
@@ -338,16 +329,24 @@ function renderMonthSpendList(parent, spendRecords) {
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: r.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) });
       tr.createEl('td', { text: r.description });
-      tr.createEl('td', { text: CAT_LABELS[r.periodicity] || r.periodicity });
+      tr.createEl('td', { text: fmtCat(r.spend_category) });
       tr.createEl('td', { text: fmt(r.amount) });
     });
 }
 
-function renderMonth(container, records, year, month) {
+function renderMonth(container, dayInfoEl, records, year, month) {
   container.empty();
 
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+
+  if (isCurrentMonth) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    dayInfoEl.textContent = `Day ${now.getDate()} of ${daysInMonth} — month in progress`;
+    dayInfoEl.style.display = '';
+  } else {
+    dayInfoEl.style.display = 'none';
+  }
 
   const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
   const monthSpend = spendInMonth(records, year, month);
@@ -358,16 +357,14 @@ function renderMonth(container, records, year, month) {
   const totalCommitted = Object.values(committedByCat).reduce((a, b) => a + b, 0);
   const totalSpent     = Object.values(spentByCat).reduce((a, b) => a + b, 0);
 
-  if (isCurrentMonth) {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    container.createEl('div', {
-      text: `Day ${now.getDate()} of ${daysInMonth} — month in progress`,
-      attr: { style: 'font-size: 0.8em; color: var(--text-muted); margin-bottom: 0.75em;' }
-    });
-  }
-
-  renderSummaryCards(container, totalCommitted, totalSpent);
-  renderCategoryTable(container, committedByCat, spentByCat);
+  const annualInstallment = committedByCat.annual  || 0;
+  const fixedCosts        = committedByCat.monthly || 0;
+  renderSummaryCards(container, [
+    { label: 'Annual Costs Installment', value: fmt(annualInstallment) },
+    { label: 'Fixed Costs',              value: fmt(fixedCosts)        },
+    { label: 'Spend This Month',         value: fmt(totalSpent)        },
+    { label: 'Total',                    value: fmt(annualInstallment + fixedCosts + totalSpent) },
+  ]);
   renderMonthSpendList(container, monthSpend);
 }
 
@@ -406,6 +403,7 @@ const monthlyOuter       = root.createEl('div', { cls: 'budget-section', attr: {
 const monthlyOuterHeader = monthlyOuter.createEl('div', { attr: { style: HEADER_STYLE } });
 monthlyOuterHeader.createEl('div', { text: 'Monthly View', attr: { style: TITLE_STYLE } });
 const monthNav           = monthlyOuterHeader.createEl('div');
+const dayInfoEl          = monthlyOuter.createEl('div', { attr: { style: 'font-size:0.8em;color:var(--text-muted);margin:-0.25em 0 0.75em;text-align:right;display:none' } });
 
 // Inner: Snapshot
 const snapshotSection = monthlyOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(100, 140, 220, 0.18)' } });
@@ -420,11 +418,14 @@ commitSection.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
 const commitContent   = commitSection.createEl('div');
 
 // Annual
-const annualSection  = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.18)' } });
-const annualHeader   = annualSection.createEl('div', { attr: { style: HEADER_STYLE } });
-annualHeader.createEl('div', { text: 'Annual View', attr: { style: TITLE_STYLE } });
-const annualNav      = annualHeader.createEl('div');
-const annualContent  = annualSection.createEl('div');
+const annualOuter       = root.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.12); padding: 1em 1.25em' } });
+const annualOuterHeader = annualOuter.createEl('div', { attr: { style: HEADER_STYLE } });
+annualOuterHeader.createEl('div', { text: 'Annual View', attr: { style: TITLE_STYLE } });
+const annualNav         = annualOuterHeader.createEl('div');
+const annualInner       = annualOuter.createEl('div', { cls: 'budget-section', attr: { style: 'background: rgba(60, 180, 130, 0.18)' } });
+annualInner.createEl('div', { attr: { style: INNER_HEADER_STYLE } })
+  .createEl('span', { text: 'Summary', attr: { style: INNER_TITLE_STYLE } });
+const annualContent     = annualInner.createEl('div');
 
 async function refreshAnnual() {
   const records = await loadYear(state.annualYear);
@@ -451,7 +452,7 @@ async function refreshMonth() {
       refreshMonth();
     }
   );
-  renderMonth(monthContent, records, state.monthYear, state.month);
+  renderMonth(monthContent, dayInfoEl, records, state.monthYear, state.month);
   commitContent.empty();
   renderCommitmentsTable(commitContent, records, state.monthYear);
 }
