@@ -203,7 +203,7 @@ export function renderAnnual(
     {
       label: 'Monthly Fixed Costs',
       total: committed.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + annualValue(r, year), 0),
-      spent: spend.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + r.amount, 0),
+      spent: committed.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + monthsToDate(r, year) * r.amount, 0),
     },
   ];
 
