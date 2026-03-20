@@ -32,7 +32,7 @@ export function renderSummaryCards(
   const tbody = table.createEl('tbody').createEl('tr');
   cols.forEach(({ label, value }) => {
     thead.createEl('th', { text: label });
-    tbody.createEl('td', { text: value });
+    tbody.createEl('td', { text: value, attr: { 'data-label': label } });
   });
 }
 
@@ -68,7 +68,7 @@ export function renderMonthSpendList(
   currency: string,
 ): void {
   if (spendRecords.length === 0) return;
-  const table = parent.createEl('table', { cls: 'tl-table' });
+  const table = parent.createEl('table', { cls: 'tl-table tl-spend-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Date', 'Description', 'Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -117,7 +117,7 @@ export function renderMonth(
   const totalSpent        = Object.values(spentByCat).reduce((a, b) => a + b, 0);
 
   renderSummaryCards(cardsContainer, [
-    { label: 'Annual Costs Installment', value: fmt(annualInstallment, currency) },
+    { label: 'Annual Installment',       value: fmt(annualInstallment, currency) },
     { label: 'Fixed Costs',              value: fmt(fixedCosts, currency)         },
     { label: 'Spend This Month',         value: fmt(totalSpent, currency)         },
     { label: 'Total',                    value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
@@ -142,7 +142,7 @@ function renderDetailTable(
   }
 
   parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
-  const table = parent.createEl('table', { cls: 'tl-table' });
+  const table = parent.createEl('table', { cls: 'tl-table tl-detail-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
@@ -208,7 +208,7 @@ export function renderAnnual(
   ];
 
   // Summary table
-  const table = blueContainer.createEl('table', { cls: 'tl-table' });
+  const table = blueContainer.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');

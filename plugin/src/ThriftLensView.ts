@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, normalizePath } from 'obsidian';
+import { ItemView, WorkspaceLeaf, normalizePath, setIcon } from 'obsidian';
 import type ThriftLensPlugin from './main';
 import { loadYear, yearFileExists } from './loader';
 import type { BudgetEntry } from './types';
@@ -67,10 +67,20 @@ export class ThriftLensView extends ItemView {
     toolbar.createEl('div', { cls: 'tl-sep' });
     this.monthNav  = toolbar.createEl('div', { cls: 'tl-nav-slot' });
     this.annualNav = toolbar.createEl('div', { cls: 'tl-nav-slot' });
-    const todayBtn = toolbar.createEl('button', { text: 'Today',       cls: 'tl-today-btn' });
+    const todayBtn = toolbar.createEl('button', { cls: 'tl-today-btn', attr: { title: 'Go to today' } });
+    setIcon(todayBtn, 'calendar');
+    todayBtn.createEl('span', { text: 'Today', cls: 'tl-btn-label' });
+
     toolbar.createEl('div', { cls: 'tl-spacer' });
-    const logBtn      = toolbar.createEl('button', { text: '+ Log',      cls: 'tl-action-btn' });
-    const registerBtn = toolbar.createEl('button', { text: '+ Register', cls: 'tl-action-btn' });
+
+    const logBtn = toolbar.createEl('button', { cls: 'tl-action-btn', attr: { title: 'Log an expense' } });
+    setIcon(logBtn, 'pencil');
+    logBtn.createEl('span', { text: 'Log', cls: 'tl-btn-label' });
+
+    const registerBtn = toolbar.createEl('button', { cls: 'tl-action-btn', attr: { title: 'New register' } });
+    setIcon(registerBtn, 'file-plus');
+    registerBtn.createEl('span', { text: 'Register', cls: 'tl-btn-label' });
+
     toolbar.createEl('span', { text: `v${this.plugin.manifest.version}`, cls: 'tl-version' });
 
     // ── Monthly outer ──────────────────────────────────────────
@@ -201,6 +211,8 @@ export class ThriftLensView extends ItemView {
         this.annualBlueContent, this.annualPurpleContent,
         annualRecords, annualYear, currency,
       );
+
+      this.showTab(this.state.activeTab);
     } finally {
       this.refreshing = false;
     }

@@ -20,13 +20,110 @@
 }
 
 @media (max-width: 480px) {
+  /* ── Toolbar ── */
   .tl-dashboard .tl-toolbar {
     flex-wrap: wrap;
+    gap: 0.4em;
+    padding: 0.35em 0.5em;
+    margin-bottom: 0.85em;
   }
-  .tl-dashboard .tl-spacer {
+  /* Row 1: tabs then action buttons */
+  .tl-dashboard .tl-tab-group  { order: 1; }
+  .tl-dashboard .tl-today-btn  { order: 2; }
+  .tl-dashboard .tl-action-btn { order: 2; }
+  /* Row 2: navigator centred */
+  .tl-dashboard .tl-nav-slot {
+    order: 3;
     flex-basis: 100%;
-    height: 0;
-    margin: 0;
+    display: flex;
+    justify-content: center;
+  }
+  /* Hidden on mobile */
+  .tl-dashboard .tl-spacer,
+  .tl-dashboard .tl-sep,
+  .tl-dashboard .tl-version {
+    display: none;
+  }
+  /* Compact sizing */
+  .tl-dashboard .tl-tab-btn {
+    padding: 0.22em 0.7em;
+    font-size: 0.82em;
+  }
+  .tl-dashboard .tl-tab-btn.tl-tab-btn--active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+  }
+  .tl-dashboard .tl-nav-label {
+    min-width: 6em;
+    font-size: 0.85em;
+  }
+  .tl-dashboard .tl-nav-btn {
+    padding: 0.1em 0.4em;
+  }
+  .tl-dashboard .tl-today-btn,
+  .tl-dashboard .tl-action-btn {
+    padding: 0.2em 0.45em;
+  }
+  .tl-dashboard .tl-btn-label {
+    display: none;
+  }
+
+  /* ── Sections ── */
+  .tl-dashboard .tl-section {
+    padding: 0.6em 0.65em;
+  }
+
+  /* ── Table cell padding ── */
+  .tl-dashboard .tl-table thead th,
+  .tl-dashboard .tl-table tbody td,
+  .tl-dashboard .tl-table tfoot td {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  /* ── Summary cards: stacked (label above, value below) ── */
+  .tl-dashboard .tl-summary-table {
+    margin-bottom: 0.75em;
+  }
+  .tl-dashboard .tl-summary-table thead {
+    display: none;
+  }
+  .tl-dashboard .tl-summary-table tbody tr {
+    display: block;
+  }
+  .tl-dashboard .tl-table.tl-summary-table tbody td {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5em 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+    font-size: 1.25em;
+    text-align: left;
+  }
+  .tl-dashboard .tl-summary-table tbody td:last-child {
+    border-bottom: none;
+  }
+  .tl-dashboard .tl-summary-table tbody td::before {
+    content: attr(data-label);
+    font-size: 0.55em;
+    font-weight: 600;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.15em;
+  }
+
+  /* ── Spend list: hide Category column ── */
+  .tl-dashboard .tl-spend-table th:nth-child(3),
+  .tl-dashboard .tl-spend-table td:nth-child(3) {
+    display: none;
+  }
+
+  /* ── Annual tables: hide Remaining Commitment column ── */
+  .tl-dashboard .tl-annual-summary-table th:nth-child(4),
+  .tl-dashboard .tl-annual-summary-table td:nth-child(4),
+  .tl-dashboard .tl-detail-table th:nth-child(4),
+  .tl-dashboard .tl-detail-table td:nth-child(4) {
+    display: none;
   }
 }
 
