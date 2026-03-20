@@ -45,7 +45,7 @@ export class AddEntryModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: 'Add Entry' });
+    contentEl.createEl('h2', { text: 'Log Entry' });
 
     new Setting(contentEl)
       .setName('Date')
@@ -57,7 +57,7 @@ export class AddEntryModal extends Modal {
     new Setting(contentEl)
       .setName('Amount')
       .addText(t => t
-        .setPlaceholder('0.00')
+        .setPlaceholder(`${this.plugin.settings.currencySymbol}0.00`)
         .onChange(v => { this.form.amount = v; }));
 
     new Setting(contentEl)

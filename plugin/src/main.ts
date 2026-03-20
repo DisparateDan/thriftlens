@@ -14,7 +14,7 @@ export default class ThriftLensPlugin extends Plugin {
 
     this.registerView(VIEW_TYPE, leaf => new ThriftLensView(leaf, this));
 
-    this.addRibbonIcon('wallet', 'ThriftLens', () => this.activateView());
+    this.addRibbonIcon('hand-coins', 'ThriftLens', () => this.activateView());
 
     this.addCommand({
       id:       'open-dashboard',

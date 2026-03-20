@@ -52,7 +52,7 @@ export class ThriftLensView extends ItemView {
 
   getViewType():    string { return VIEW_TYPE; }
   getDisplayText(): string { return 'ThriftLens'; }
-  getIcon():        string { return 'wallet'; }
+  getIcon():        string { return 'hand-coins'; }
 
   async onOpen(): Promise<void> {
     const root = this.contentEl;
