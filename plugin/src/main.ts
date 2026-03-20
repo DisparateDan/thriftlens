@@ -23,19 +23,19 @@ export default class ThriftLensPlugin extends Plugin {
 
     this.addCommand({
       id:       'add-entry',
-      name:     'Add entry',
+      name:     'Log an expense',
       callback: () => new AddEntryModal(this.app, this).open(),
     });
 
     this.addCommand({
       id:       'create-record',
-      name:     'Create record',
+      name:     'New register',
       callback: () => new CreateRecordModal(this.app, this).open(),
     });
 
     this.addCommand({
       id:       'carry-forward',
-      name:     'Carry forward',
+      name:     'Plan next year',
       callback: () => new CarryForwardModal(this.app, this).open(),
     });
 
