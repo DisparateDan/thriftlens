@@ -50,6 +50,7 @@ export function renderCommitmentsTable(
 
   records
     .filter(r => (r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate') && r.periodicity === 'monthly')
+    .sort((a, b) => a.description.localeCompare(b.description))
     .forEach(r => {
       tMonthly += r.amount;
       const tr = tbody.createEl('tr');
@@ -146,14 +147,37 @@ function renderDetailTable(
   ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
 
-  for (const [cat, entries] of byCategory) {
-    const total = entries.reduce((s, r) => s + annualValue(r, year), 0);
-    const spent = spentFn(entries);
-    const tr    = tbody.createEl('tr');
-    tr.createEl('td', { text: fmtCat(cat) });
+  for (const [cat, entries] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const total        = entries.reduce((s, r) => s + annualValue(r, year), 0);
+    const spent        = spentFn(entries);
+    const expandable   = entries.length > 1;
+
+    const tr = tbody.createEl('tr', { cls: expandable ? 'tl-detail-row tl-detail-row--expandable' : 'tl-detail-row' });
+    const catCell = tr.createEl('td');
+    if (expandable) catCell.createEl('span', { text: '▶', cls: 'tl-chevron' });
+    catCell.createEl('span', { text: fmtCat(cat) });
     tr.createEl('td', { text: fmt(total, currency) });
     tr.createEl('td', { text: spent ? fmt(spent, currency) : '—' });
     tr.createEl('td', { text: fmt(total - spent, currency) });
+
+    if (expandable) {
+      const subRows = [...entries]
+        .sort((a, b) => a.description.localeCompare(b.description))
+        .map(r => {
+          const sub = tbody.createEl('tr', { cls: 'tl-detail-sub' });
+          sub.createEl('td', { text: r.description, cls: 'tl-detail-sub-desc' });
+          sub.createEl('td', { text: fmt(annualValue(r, year), currency) });
+          sub.createEl('td', { text: '—' });
+          sub.createEl('td', { text: '—' });
+          return sub;
+        });
+
+      tr.addEventListener('click', () => {
+        const expanding = !tr.hasClass('tl-detail-row--expanded');
+        tr.toggleClass('tl-detail-row--expanded', expanding);
+        subRows.forEach(s => s.toggleClass('tl-detail-sub--visible', expanding));
+      });
+    }
   }
 }
 

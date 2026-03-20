@@ -271,6 +271,43 @@
   background: var(--background-modifier-hover);
 }
 
+/* ─── Expandable detail rows ───────────────────────────────────── */
+
+.tl-dashboard .tl-detail-row--expandable {
+  cursor: pointer;
+}
+
+.tl-dashboard .tl-chevron {
+  display: inline-block;
+  margin-right: 0.35em;
+  font-size: 0.65em;
+  vertical-align: middle;
+  transition: transform 0.15s ease;
+}
+
+.tl-dashboard .tl-detail-row--expanded .tl-chevron {
+  transform: rotate(90deg);
+}
+
+.tl-dashboard .tl-detail-sub {
+  display: none;
+}
+
+.tl-dashboard .tl-detail-sub--visible {
+  display: table-row;
+}
+
+.tl-dashboard .tl-detail-sub--visible td {
+  background: var(--background-primary);
+  color: var(--text-muted);
+  font-size: 0.88em;
+  border-left: 3px solid var(--background-modifier-border);
+}
+
+.tl-dashboard .tl-detail-sub-desc {
+  padding-left: 2em;
+}
+
 .tl-dashboard .tl-table tfoot td {
   text-align: right;
   padding: 0.65em 0.85em 0.35em;
