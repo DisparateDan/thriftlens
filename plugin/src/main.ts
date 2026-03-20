@@ -4,6 +4,7 @@ import { ThriftLensSettings, DEFAULT_SETTINGS, ThriftLensSettingTab } from './se
 import { AddEntryModal }     from './modals/AddEntryModal';
 import { CreateRecordModal } from './modals/CreateRecordModal';
 import { CarryForwardModal } from './modals/CarryForwardModal';
+import { ImportCsvModal }    from './modals/ImportCsvModal';
 
 export default class ThriftLensPlugin extends Plugin {
   settings: ThriftLensSettings = DEFAULT_SETTINGS;
@@ -37,6 +38,12 @@ export default class ThriftLensPlugin extends Plugin {
       id:       'carry-forward',
       name:     'Plan next year',
       callback: () => new CarryForwardModal(this.app, this).open(),
+    });
+
+    this.addCommand({
+      id:       'import-csv',
+      name:     'Import from CSV',
+      callback: () => new ImportCsvModal(this.app, this).open(),
     });
 
     this.addSettingTab(new ThriftLensSettingTab(this.app, this));
