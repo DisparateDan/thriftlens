@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ThriftLens** — an Obsidian vault for personal financial budgeting using DataviewJS dashboards that query structured markdown data files.
+**ThriftLens** — an Obsidian vault for personal cashflow dashboarding using DataviewJS dashboards that query structured markdown data files.
 
 Don't show me any code diffs or code output in the chat stream. I'll check them myself if I want to see.
 
