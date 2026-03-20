@@ -2,6 +2,7 @@ import { App, Modal, Notice, Setting, normalizePath } from 'obsidian';
 import type ThriftLensPlugin from '../main';
 import type { BudgetEntry } from '../types';
 import { serialiseEntry } from '../parser';
+import { getAvailableYears, loadYear } from '../loader';
 
 function todayStr(): string {
   const d = new Date();
@@ -16,13 +17,13 @@ function parseDateStr(s: string): Date | null {
 }
 
 interface FormState {
-  dateStr:       string;
-  amount:        string;
-  spend_type:    BudgetEntry['spend_type'];
-  periodicity:   BudgetEntry['periodicity'];
+  dateStr:        string;
+  amount:         string;
+  spend_type:     BudgetEntry['spend_type'];
+  periodicity:    BudgetEntry['periodicity'];
   spend_category: string;
-  description:   string;
-  validUntilStr: string;
+  description:    string;
+  validUntilStr:  string;
 }
 
 export class AddEntryModal extends Modal {
@@ -42,10 +43,12 @@ export class AddEntryModal extends Modal {
     this.plugin = plugin;
   }
 
-  onOpen(): void {
+  async onOpen(): Promise<void> {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl('h2', { text: 'Log Entry' });
+
+    const categories = await this.loadCategories();
 
     new Setting(contentEl)
       .setName('Date')
@@ -80,12 +83,21 @@ export class AddEntryModal extends Modal {
         .setValue(this.form.periodicity)
         .onChange(v => { this.form.periodicity = v as BudgetEntry['periodicity']; }));
 
-    new Setting(contentEl)
+    // Spend category with datalist for existing slugs
+    const catSetting = new Setting(contentEl)
       .setName('Spend category')
-      .setDesc('Lowercase slug, e.g. groceries or heating_oil')
-      .addText(t => t
-        .setPlaceholder('e.g. groceries')
-        .onChange(v => { this.form.spend_category = v.trim().toLowerCase(); }));
+      .setDesc('Lowercase slug, e.g. groceries or heating_oil');
+    catSetting.addText(t => {
+      t.setPlaceholder('e.g. groceries')
+        .onChange(v => { this.form.spend_category = v.trim().toLowerCase(); });
+      if (categories.length > 0) {
+        const listId  = 'tl-category-datalist';
+        const datalist = contentEl.createEl('datalist');
+        datalist.id   = listId;
+        categories.forEach(c => datalist.createEl('option', { value: c }));
+        t.inputEl.setAttribute('list', listId);
+      }
+    });
 
     new Setting(contentEl)
       .setName('Description')
@@ -109,6 +121,15 @@ export class AddEntryModal extends Modal {
 
   onClose(): void {
     this.contentEl.empty();
+  }
+
+  private async loadCategories(): Promise<string[]> {
+    const folder = this.plugin.settings.dataFolder;
+    const years  = getAvailableYears(this.app, folder);
+    const all    = await Promise.all(years.map(y => loadYear(this.app, folder, y)));
+    const cats   = new Set<string>();
+    all.flat().forEach(e => { if (e.spend_category) cats.add(e.spend_category); });
+    return [...cats].sort();
   }
 
   private async submit(): Promise<void> {
@@ -136,7 +157,7 @@ export class AddEntryModal extends Modal {
     const path = normalizePath(`${this.plugin.settings.dataFolder}/${year}.md`);
     const file = this.app.vault.getFileByPath(path);
     if (!file) {
-      new Notice(`No record found for ${year}. Use "Create record" first.`);
+      new Notice(`No register found for ${year}. Use "New Register" first.`);
       return;
     }
 
