@@ -1,10 +1,12 @@
-import { Plugin, normalizePath } from 'obsidian';
+import { Plugin, Notice, normalizePath } from 'obsidian';
 import { ThriftLensView, VIEW_TYPE } from './ThriftLensView';
 import { ThriftLensSettings, DEFAULT_SETTINGS, ThriftLensSettingTab } from './settings';
 import { AddEntryModal }     from './modals/AddEntryModal';
 import { CreateRecordModal } from './modals/CreateRecordModal';
 import { CarryForwardModal } from './modals/CarryForwardModal';
 import { ImportCsvModal }    from './modals/ImportCsvModal';
+import { loadYear }          from './loader';
+import { generateReport }    from './exporter';
 
 export default class ThriftLensPlugin extends Plugin {
   settings: ThriftLensSettings = DEFAULT_SETTINGS;
@@ -46,6 +48,12 @@ export default class ThriftLensPlugin extends Plugin {
       callback: () => new ImportCsvModal(this.app, this).open(),
     });
 
+    this.addCommand({
+      id:       'export-report',
+      name:     'Export report',
+      callback: () => this.exportReport(),
+    });
+
     this.addSettingTab(new ThriftLensSettingTab(this.app, this));
   }
 
@@ -59,6 +67,39 @@ export default class ThriftLensPlugin extends Plugin {
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+  }
+
+  private async exportReport(): Promise<void> {
+    const now    = new Date();
+    const year   = now.getFullYear();
+    const month  = now.getMonth();
+    const folder = this.settings.dataFolder;
+    const currency = this.settings.currencySymbol;
+
+    const [monthRecords, annualRecords] = await Promise.all([
+      loadYear(this.app, folder, year),
+      loadYear(this.app, folder, year),
+    ]);
+
+    const html     = generateReport(monthRecords, annualRecords, year, month, currency);
+    const monthStr = String(month + 1).padStart(2, '0');
+    const filename = `ThriftLens-${year}-${monthStr}.html`;
+    const path     = normalizePath(`${folder}/exports/${filename}`);
+
+    await this.ensureDataFolder();
+    const exportFolder = normalizePath(`${folder}/exports`);
+    if (!this.app.vault.getFolderByPath(exportFolder)) {
+      await this.app.vault.createFolder(exportFolder);
+    }
+
+    const existing = this.app.vault.getFileByPath(path);
+    if (existing) {
+      await this.app.vault.modify(existing, html);
+    } else {
+      await this.app.vault.create(path, html);
+    }
+
+    new Notice(`Report saved: ${filename}`);
   }
 
   // Called by modals before any vault write — never on load or view open.
