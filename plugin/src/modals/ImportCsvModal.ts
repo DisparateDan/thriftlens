@@ -85,6 +85,56 @@ function parseCsv(content: string): ParseResult {
   return { entries, parseErrors };
 }
 
+// ── Section-aware insertion ───────────────────────────────────────
+
+const SECTION_MARKERS: Record<BudgetEntry['spend_type'], string> = {
+  planned_estimate: '# ── Planned estimate',
+  planned_known:    '# ── Planned known',
+  actual_spend:     '# ── Actual spend',
+};
+
+// Process bottom-to-top so earlier insertion positions stay valid.
+const INSERTION_ORDER: BudgetEntry['spend_type'][] = ['actual_spend', 'planned_known', 'planned_estimate'];
+
+function insertBySection(content: string, entries: BudgetEntry[]): string {
+  const groups = new Map<BudgetEntry['spend_type'], BudgetEntry[]>(
+    INSERTION_ORDER.map(t => [t, []]),
+  );
+  for (const e of entries) groups.get(e.spend_type)!.push(e);
+
+  let result = content;
+
+  for (const type of INSERTION_ORDER) {
+    const typeEntries = groups.get(type)!;
+    if (typeEntries.length === 0) continue;
+
+    const block = '\n\n' + typeEntries.map(e => serialiseEntry(e)).join('\n\n');
+    const marker = SECTION_MARKERS[type];
+    const markerPos = result.indexOf(marker);
+
+    if (markerPos === -1) {
+      const fence = result.lastIndexOf('\n```');
+      if (fence === -1) continue;
+      result = result.slice(0, fence) + block + result.slice(fence);
+      continue;
+    }
+
+    const markerLineEnd = result.indexOf('\n', markerPos) + 1;
+    let sectionEnd = result.lastIndexOf('\n```');
+    for (const otherType of INSERTION_ORDER) {
+      if (otherType === type) continue;
+      const otherPos = result.indexOf(SECTION_MARKERS[otherType], markerLineEnd);
+      if (otherPos !== -1 && otherPos < sectionEnd) sectionEnd = otherPos;
+    }
+
+    const trimmedLen = result.slice(markerLineEnd, sectionEnd).trimEnd().length;
+    const insertAt = markerLineEnd + trimmedLen;
+    result = result.slice(0, insertAt) + block + result.slice(insertAt);
+  }
+
+  return result;
+}
+
 // ── Import result ─────────────────────────────────────────────────
 
 interface SkippedEntry {
@@ -192,17 +242,20 @@ export class ImportCsvModal extends Modal {
 
       // Build conflict key set from existing planned entries
       const existing = await loadYear(this.app, folder, year);
+      const plannedKey = (e: BudgetEntry) =>
+        `${e.spend_category}|${e.periodicity}|${e.description.toLowerCase().trim()}`;
+
       const plannedKeys = new Set(
         existing
           .filter(e => e.spend_type !== 'actual_spend')
-          .map(e => `${e.spend_category}|${e.periodicity}`),
+          .map(plannedKey),
       );
 
       // Partition: append vs skip
       const toAppend: BudgetEntry[] = [];
       for (const e of yearEntries) {
         if (e.spend_type !== 'actual_spend') {
-          const key = `${e.spend_category}|${e.periodicity}`;
+          const key = plannedKey(e);
           if (plannedKeys.has(key)) {
             result.skipped.push({ year, spend_category: e.spend_category, periodicity: e.periodicity });
             continue;
@@ -228,12 +281,7 @@ export class ImportCsvModal extends Modal {
       }
 
       const target = this.app.vault.getFileByPath(path)!;
-      await this.app.vault.process(target, content => {
-        const closingFence = content.lastIndexOf('\n```');
-        if (closingFence === -1) return content;
-        const block = toAppend.map(e => serialiseEntry(e)).join('\n\n');
-        return content.slice(0, closingFence) + '\n\n' + block + '\n' + content.slice(closingFence);
-      });
+      await this.app.vault.process(target, content => insertBySection(content, toAppend));
 
       result.imported += toAppend.length;
     }
