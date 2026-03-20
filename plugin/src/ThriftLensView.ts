@@ -7,7 +7,8 @@ import {
   renderNavBar, renderSummaryCards, renderCommitmentsTable,
   renderMonth, renderAnnual,
 } from './renderer';
-import { AddEntryModal } from './modals/AddEntryModal';
+import { AddEntryModal }     from './modals/AddEntryModal';
+import { CreateRecordModal } from './modals/CreateRecordModal';
 
 export const VIEW_TYPE = 'thriftlens-dashboard';
 
@@ -66,9 +67,10 @@ export class ThriftLensView extends ItemView {
     toolbar.createEl('div', { cls: 'tl-sep' });
     this.monthNav  = toolbar.createEl('div', { cls: 'tl-nav-slot' });
     this.annualNav = toolbar.createEl('div', { cls: 'tl-nav-slot' });
+    const todayBtn = toolbar.createEl('button', { text: 'Today',       cls: 'tl-today-btn' });
     toolbar.createEl('div', { cls: 'tl-spacer' });
-    const addBtn   = toolbar.createEl('button', { text: '+ Entry',  cls: 'tl-add-btn' });
-    const todayBtn = toolbar.createEl('button', { text: 'Today',    cls: 'tl-today-btn' });
+    const logBtn      = toolbar.createEl('button', { text: '+ Log',      cls: 'tl-action-btn' });
+    const registerBtn = toolbar.createEl('button', { text: '+ Register', cls: 'tl-action-btn' });
 
     // ── Monthly outer ──────────────────────────────────────────
     this.monthlyOuter = root.createEl('div', { cls: 'tl-tab-pane' });
@@ -104,7 +106,8 @@ export class ThriftLensView extends ItemView {
     this.monthTabBtn.onclick  = () => this.showTab('monthly');
     this.annualTabBtn.onclick = () => this.showTab('annual');
 
-    addBtn.onclick = () => new AddEntryModal(this.app, this.plugin).open();
+    logBtn.onclick      = () => new AddEntryModal(this.app, this.plugin).open();
+    registerBtn.onclick = () => new CreateRecordModal(this.app, this.plugin).open();
 
     todayBtn.onclick = () => {
       const now = new Date();
