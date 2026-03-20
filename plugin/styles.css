@@ -19,6 +19,17 @@
   flex-wrap: nowrap;
 }
 
+@media (max-width: 480px) {
+  .tl-dashboard .tl-toolbar {
+    flex-wrap: wrap;
+  }
+  .tl-dashboard .tl-spacer {
+    flex-basis: 100%;
+    height: 0;
+    margin: 0;
+  }
+}
+
 .tl-dashboard .tl-tab-group {
   display: flex;
   border: 1px solid var(--background-modifier-border);
