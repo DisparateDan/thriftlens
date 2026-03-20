@@ -270,6 +270,15 @@
 
 /* ─── Import CSV modal ─────────────────────────────────────────── */
 
+.tl-currency-prefix {
+  font-size: 0.95em;
+  color: var(--text-muted);
+  padding-right: 0.3em;
+  align-self: center;
+}
+
+/* ─── Import CSV modal ─────────────────────────────────────────── */
+
 .tl-import-modal .tl-import-intro {
   color: var(--text-muted);
   font-size: 0.9em;

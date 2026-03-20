@@ -54,11 +54,14 @@ export class AddEntryModal extends Modal {
         .setValue(this.form.dateStr)
         .onChange(v => { this.form.dateStr = v; }));
 
-    new Setting(contentEl)
-      .setName('Amount')
-      .addText(t => t
-        .setPlaceholder(`${this.plugin.settings.currencySymbol}0.00`)
-        .onChange(v => { this.form.amount = v; }));
+    const amountSetting = new Setting(contentEl).setName('Amount');
+    amountSetting.controlEl.createEl('span', {
+      text: this.plugin.settings.currencySymbol,
+      cls: 'tl-currency-prefix',
+    });
+    amountSetting.addText(t => t
+      .setPlaceholder('0.00')
+      .onChange(v => { this.form.amount = v; }));
 
     new Setting(contentEl)
       .setName('Spend type')
