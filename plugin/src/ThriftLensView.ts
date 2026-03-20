@@ -71,6 +71,7 @@ export class ThriftLensView extends ItemView {
     toolbar.createEl('div', { cls: 'tl-spacer' });
     const logBtn      = toolbar.createEl('button', { text: '+ Log',      cls: 'tl-action-btn' });
     const registerBtn = toolbar.createEl('button', { text: '+ Register', cls: 'tl-action-btn' });
+    toolbar.createEl('span', { text: `v${this.plugin.manifest.version}`, cls: 'tl-version' });
 
     // ── Monthly outer ──────────────────────────────────────────
     this.monthlyOuter = root.createEl('div', { cls: 'tl-tab-pane' });

@@ -131,22 +131,30 @@ function renderDetailTable(
   records: BudgetEntry[],
   year: number,
   currency: string,
-  spentFn: (r: BudgetEntry) => number,
+  spentFn: (entries: BudgetEntry[]) => number,
 ): void {
+  // Group by spend_category so multiple entries sharing a slug collapse to one row.
+  const byCategory = new Map<string, BudgetEntry[]>();
+  for (const r of records) {
+    if (!byCategory.has(r.spend_category)) byCategory.set(r.spend_category, []);
+    byCategory.get(r.spend_category)!.push(r);
+  }
+
   parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
   const table = parent.createEl('table', { cls: 'tl-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
-  records.forEach(r => {
-    const total = annualValue(r, year);
-    const spent = spentFn(r);
+
+  for (const [cat, entries] of byCategory) {
+    const total = entries.reduce((s, r) => s + annualValue(r, year), 0);
+    const spent = spentFn(entries);
     const tr    = tbody.createEl('tr');
-    tr.createEl('td', { text: fmtCat(r.spend_category) });
+    tr.createEl('td', { text: fmtCat(cat) });
     tr.createEl('td', { text: fmt(total, currency) });
     tr.createEl('td', { text: spent ? fmt(spent, currency) : '—' });
     tr.createEl('td', { text: fmt(total - spent, currency) });
-  });
+  }
 }
 
 export function renderAnnual(
@@ -203,12 +211,12 @@ export function renderAnnual(
     blueContainer, 'Annual Costs Detail',
     committed.filter(r => r.periodicity === 'annual'),
     year, currency,
-    r => spendByCat[r.spend_category] || 0,
+    entries => spendByCat[entries[0].spend_category] || 0,
   );
   renderDetailTable(
     purpleContainer, 'Monthly Fixed Costs Detail',
     committed.filter(r => r.periodicity === 'monthly'),
     year, currency,
-    r => monthsToDate(r, year) * r.amount,
+    entries => entries.reduce((s, r) => s + monthsToDate(r, year) * r.amount, 0),
   );
 }

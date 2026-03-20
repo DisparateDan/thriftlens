@@ -109,6 +109,12 @@
   background: var(--interactive-hover);
 }
 
+.tl-dashboard .tl-version {
+  font-size: 0.72em;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
 /* ─── Nav ──────────────────────────────────────────────────────── */
 
 .tl-dashboard .tl-nav {
