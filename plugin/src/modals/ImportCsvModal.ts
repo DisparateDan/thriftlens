@@ -132,11 +132,24 @@ export class ImportCsvModal extends Modal {
 
     new Setting(contentEl)
       .addButton(b => b.setButtonText('Cancel').onClick(() => this.close()))
+      .addButton(b => b.setButtonText('Create template').onClick(() => this.createTemplate()))
       .addButton(b => b.setButtonText('Import').setCta().onClick(() => this.run()));
   }
 
   onClose(): void {
     this.contentEl.empty();
+  }
+
+  // ── Create template ───────────────────────────────────────────
+
+  private async createTemplate(): Promise<void> {
+    if (!this.csvPath) { new Notice('Enter a file path for the template'); return; }
+    const path = normalizePath(this.csvPath);
+    if (this.app.vault.getFileByPath(path)) { new Notice(`File already exists: ${this.csvPath}`); return; }
+    const header = 'date,amount,spend_type,periodicity,spend_category,description,valid_until\n';
+    await this.app.vault.create(path, header);
+    new Notice(`Template created: ${this.csvPath}`);
+    this.close();
   }
 
   // ── Run ───────────────────────────────────────────────────────
