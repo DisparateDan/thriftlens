@@ -297,7 +297,7 @@ function parseRecordsBlock(text) {
 
 async function loadYear(year) {
   const page = dv.pages('"budget"')
-    .where(p => p.tl_type === 'record' && p.year === year)
+    .where(p => p.tl_type === 'register' && p.year === year)
     .first();
   if (!page) return [];
   const content = await app.vault.read(app.vault.getAbstractFileByPath(page.file.path));

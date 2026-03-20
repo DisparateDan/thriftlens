@@ -1,7 +1,7 @@
 import { App, Modal, Notice, Setting, normalizePath } from 'obsidian';
 import type ThriftLensPlugin from '../main';
 import type { BudgetEntry } from '../types';
-import { loadYear } from '../loader';
+import { loadYear, getAvailableYears } from '../loader';
 import { serialiseEntry } from '../parser';
 
 interface ProposedEntry extends BudgetEntry {
@@ -40,24 +40,38 @@ export class CarryForwardModal extends Modal {
     contentEl.addClass('tl-carry-modal');
     contentEl.createEl('h2', { text: 'Plan Next Year' });
 
+    const years = getAvailableYears(this.app, this.plugin.settings.dataFolder);
+
+    if (years.length === 0) {
+      contentEl.createEl('p', {
+        text: 'No registers found. Create one first using New Register.',
+        cls: 'tl-carry-intro',
+      });
+      new Setting(contentEl).addButton(b => b.setButtonText('Close').onClick(() => this.close()));
+      return;
+    }
+
+    // Default to the latest available year
+    this.sourceYear = years[years.length - 1];
+    this.targetYear = this.sourceYear + 1;
+
     let targetLabel: HTMLElement;
 
     new Setting(contentEl)
-      .setName('Copy from year')
+      .setName('Copy from')
       .setDesc('Entries from this register will seed the proposal.')
-      .addText(t => t
-        .setValue(String(this.sourceYear))
-        .onChange(v => {
-          const y = parseInt(v, 10);
-          if (!isNaN(y) && String(y).length === 4) {
-            this.sourceYear = y;
-            this.targetYear = y + 1;
-            targetLabel.textContent = `Target: ${this.targetYear}`;
-          }
-        }));
+      .addDropdown(d => {
+        years.forEach(y => d.addOption(String(y), String(y)));
+        d.setValue(String(this.sourceYear));
+        d.onChange(v => {
+          this.sourceYear = parseInt(v, 10);
+          this.targetYear = this.sourceYear + 1;
+          targetLabel.textContent = `Target register: ${this.targetYear}`;
+        });
+      });
 
     targetLabel = contentEl.createEl('p', {
-      text: `Target: ${this.targetYear}`,
+      text: `Target register: ${this.targetYear}`,
       cls: 'tl-carry-target-label',
     });
 
@@ -230,7 +244,7 @@ export class CarryForwardModal extends Modal {
 
     const content = [
       '---',
-      'tl_type: record',
+      'tl_type: register',
       `year: ${this.targetYear}`,
       '---',
       '',

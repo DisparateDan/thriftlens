@@ -50,7 +50,7 @@ export class CreateRecordModal extends Modal {
 
     const content = [
       '---',
-      'tl_type: record',
+      'tl_type: register',
       `year: ${year}`,
       '---',
       '',

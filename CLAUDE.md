@@ -18,7 +18,7 @@ Don't show me any code diffs or code output in the chat stream. I'll check them 
 
 ```yaml
 ---
-tl_type: record
+tl_type: register
 year: 2025
 ---
 ```
