@@ -40,8 +40,6 @@ export default class ThriftLensPlugin extends Plugin {
     });
 
     this.addSettingTab(new ThriftLensSettingTab(this.app, this));
-
-    await this.ensureDataFolder();
   }
 
   onunload(): void {
@@ -56,7 +54,8 @@ export default class ThriftLensPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  private async ensureDataFolder(): Promise<void> {
+  // Called by modals before any vault write — never on load or view open.
+  async ensureDataFolder(): Promise<void> {
     const path = normalizePath(this.settings.dataFolder);
     if (!this.app.vault.getFolderByPath(path)) {
       await this.app.vault.createFolder(path);

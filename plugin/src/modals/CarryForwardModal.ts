@@ -203,6 +203,8 @@ export class CarryForwardModal extends Modal {
       '',
     ].join('\n');
 
+    await this.plugin.ensureDataFolder();
+
     const path    = normalizePath(`${this.plugin.settings.dataFolder}/${this.targetYear}.md`);
     const existing = this.app.vault.getFileByPath(path);
 

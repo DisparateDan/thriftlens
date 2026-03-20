@@ -40,6 +40,8 @@ export class CreateRecordModal extends Modal {
       return;
     }
 
+    await this.plugin.ensureDataFolder();
+
     const path = normalizePath(`${this.plugin.settings.dataFolder}/${year}.md`);
     if (this.app.vault.getFileByPath(path)) {
       new Notice(`A record for ${year} already exists`);
