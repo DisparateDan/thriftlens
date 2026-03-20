@@ -24,11 +24,52 @@ export class CarryForwardModal extends Modal {
     this.targetYear = this.sourceYear + 1;
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): void {
+    this.renderYearPicker();
+  }
+
+  onClose(): void {
+    this.contentEl.empty();
+  }
+
+  // ── Phase 1: year picker ─────────────────────────────────────
+
+  private renderYearPicker(): void {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass('tl-carry-modal');
-    contentEl.createEl('h2', { text: `Carry Forward: ${this.sourceYear} → ${this.targetYear}` });
+    contentEl.createEl('h2', { text: 'Plan Next Year' });
+
+    let targetLabel: HTMLElement;
+
+    new Setting(contentEl)
+      .setName('Copy from year')
+      .setDesc('Entries from this register will seed the proposal.')
+      .addText(t => t
+        .setValue(String(this.sourceYear))
+        .onChange(v => {
+          const y = parseInt(v, 10);
+          if (!isNaN(y) && String(y).length === 4) {
+            this.sourceYear = y;
+            this.targetYear = y + 1;
+            targetLabel.textContent = `Target: ${this.targetYear}`;
+          }
+        }));
+
+    targetLabel = contentEl.createEl('p', {
+      text: `Target: ${this.targetYear}`,
+      cls: 'tl-carry-target-label',
+    });
+
+    new Setting(contentEl)
+      .addButton(b => b.setButtonText('Cancel').onClick(() => this.close()))
+      .addButton(b => b.setButtonText('Continue →').setCta().onClick(() => this.loadAndRender()));
+  }
+
+  private async loadAndRender(): Promise<void> {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl('h2', { text: `Plan Next Year: ${this.sourceYear} → ${this.targetYear}` });
 
     const loading = contentEl.createEl('p', { text: 'Loading source records…' });
     const sourceRecords = await loadYear(this.app, this.plugin.settings.dataFolder, this.sourceYear);
@@ -36,10 +77,6 @@ export class CarryForwardModal extends Modal {
 
     this.proposed = this.buildProposal(sourceRecords);
     this.renderBody(contentEl);
-  }
-
-  onClose(): void {
-    this.contentEl.empty();
   }
 
   // ── Proposal builder ────────────────────────────────────────

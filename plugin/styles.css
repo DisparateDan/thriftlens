@@ -270,6 +270,12 @@
 
 /* ─── Carry Forward modal ──────────────────────────────────────── */
 
+.tl-carry-modal .tl-carry-target-label {
+  font-size: 0.9em;
+  color: var(--text-muted);
+  margin: -0.5em 0 1em;
+}
+
 .tl-carry-modal .tl-carry-warn {
   color: var(--text-warning);
   font-weight: 600;
