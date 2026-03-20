@@ -10,11 +10,15 @@ export function renderNavBar(
   label: string,
   onPrev: () => void,
   onNext: () => void,
+  prevEnabled = true,
+  nextEnabled = true,
 ): void {
   const bar  = parent.createEl('div', { cls: 'tl-nav' });
   const prev = bar.createEl('button', { text: '◀', cls: 'tl-nav-btn' });
   bar.createEl('span', { text: label, cls: 'tl-nav-label' });
   const next = bar.createEl('button', { text: '▶', cls: 'tl-nav-btn' });
+  prev.disabled = !prevEnabled;
+  next.disabled = !nextEnabled;
   prev.onclick = onPrev;
   next.onclick = onNext;
 }

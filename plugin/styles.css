@@ -124,9 +124,14 @@
   color: var(--text-muted);
 }
 
-.tl-dashboard .tl-nav-btn:hover {
+.tl-dashboard .tl-nav-btn:hover:not(:disabled) {
   background: var(--interactive-hover);
   color: var(--text-normal);
+}
+
+.tl-dashboard .tl-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* ─── Day info ─────────────────────────────────────────────────── */

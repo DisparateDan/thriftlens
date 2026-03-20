@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, normalizePath } from 'obsidian';
 import type ThriftLensPlugin from './main';
-import { loadYear } from './loader';
+import { loadYear, yearFileExists } from './loader';
 import type { BudgetEntry } from './types';
 import { MONTH_NAMES } from './logic';
 import {
@@ -171,6 +171,8 @@ export class ThriftLensView extends ItemView {
           if (this.state.month > 11) { this.state.month = 0; this.state.year++; }
           this.refresh();
         },
+        month === 0  ? yearFileExists(this.app, folder, year - 1) : true,
+        month === 11 ? yearFileExists(this.app, folder, year + 1) : true,
       );
 
       // Annual nav
@@ -180,6 +182,8 @@ export class ThriftLensView extends ItemView {
         String(annualYear),
         () => { this.state.annualYear--; this.refresh(); },
         () => { this.state.annualYear++; this.refresh(); },
+        yearFileExists(this.app, folder, annualYear - 1),
+        yearFileExists(this.app, folder, annualYear + 1),
       );
 
       renderMonth(
