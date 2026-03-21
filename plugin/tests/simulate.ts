@@ -9,8 +9,13 @@
  *   ./run-simulate.sh [--years 5] [--start 2022]
  */
 
+import fs   from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { buildProposal } from '../src/carryForward';
 import type { BudgetEntry } from '../src/types';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ── Args ──────────────────────────────────────────────────────
 
@@ -171,15 +176,15 @@ function printYearReport(
   nextYear:   number,
   proposal:   ReturnType<typeof buildProposal>,
 ): void {
-  console.log('\n' + hr('═'));
-  console.log(`  YEAR ${year}`);
-  console.log(hr('═'));
+  emit('\n' + hr('═'));
+  emit(`  YEAR ${year}`);
+  emit(hr('═'));
 
   // Monthly fixed (unchanged each year)
-  console.log('\n  Monthly fixed costs:');
-  console.log(hr('─', 50));
+  emit('\n  Monthly fixed costs:');
+  emit(hr('─', 50));
   for (const r of planned.filter(r => r.periodicity === 'monthly' && r.spend_type !== 'actual_spend')) {
-    console.log(row(
+    emit(row(
       pad(r.description, 28),
       pad(money(r.amount) + '/mo', 12),
       money(r.amount * 12) + '/yr',
@@ -187,19 +192,19 @@ function printYearReport(
   }
 
   // Annual planned vs actual
-  console.log('\n  Annual commitments — planned vs actual:');
-  console.log(hr('─', 50));
-  console.log(row(
+  emit('\n  Annual commitments — planned vs actual:');
+  emit(hr('─', 50));
+  emit(row(
     pad('Category', 22),
     pad('Planned', 12),
     pad('Actual', 12),
     'Variance',
   ));
-  console.log(hr('─', 50));
+  emit(hr('─', 50));
   for (const r of planned.filter(r => r.periodicity === 'annual' && r.spend_type === 'planned_known')) {
     const actual  = actualsMap.get(r.spend_category);
     const variance = actual != null ? (actual - r.amount) / r.amount : null;
-    console.log(row(
+    emit(row(
       pad(r.description, 22),
       pad(money(r.amount), 12),
       actual != null ? pad(money(actual), 12) : pad('—', 12),
@@ -210,16 +215,16 @@ function printYearReport(
   // Estimates
   const estimates = planned.filter(r => r.spend_type === 'planned_estimate');
   if (estimates.length > 0) {
-    console.log('\n  Estimates (discretionary):');
-    console.log(hr('─', 50));
+    emit('\n  Estimates (discretionary):');
+    emit(hr('─', 50));
     for (const r of estimates) {
-      console.log(row(pad(r.description, 28), money(r.amount)));
+      emit(row(pad(r.description, 28), money(r.amount)));
     }
   }
 
   // Carry-forward proposal
-  console.log(`\n  Carry-forward proposal → ${nextYear}:`);
-  console.log(hr('─', 50));
+  emit(`\n  Carry-forward proposal → ${nextYear}:`);
+  emit(hr('─', 50));
   for (const p of proposal) {
     const isSeedChange = p.spend_type === 'planned_known' && p.periodicity === 'annual';
     const prior = planned.find(r => r.spend_category === p.spend_category && r.spend_type === 'planned_known');
@@ -227,7 +232,7 @@ function printYearReport(
       ? `  ← was ${money(prior.amount)}, ${pct((p.amount - prior.amount) / prior.amount)}`
       : '';
     const tag = p.discretionary ? '  [discretionary]' : '';
-    console.log(row(
+    emit(row(
       pad(p.description, 28),
       pad(money(p.amount), 12),
       `[${p.origin}]${tag}${change}`,
@@ -235,11 +240,24 @@ function printYearReport(
   }
 }
 
+// ── Output (stdout + file) ────────────────────────────────────
+
+const outFile = path.resolve(__dirname, '../simulation.txt');
+const stream  = fs.createWriteStream(outFile, { encoding: 'utf8' });
+
+function emit(line = ''): void {
+  process.stdout.write(line + '\n');
+  stream.write(line + '\n');
+}
+
+// Patch all console.log calls in report functions to use emit
+// (done by replacing console.log below in main and printYearReport)
+
 // ── Main ──────────────────────────────────────────────────────
 
-console.log('\nThriftLens — Carry-Forward Simulation');
-console.log(`Profile: ${MONTHLY.length} monthly, ${ANNUAL.length} annual, ${ESTIMATES.length} estimate(s)`);
-console.log(`Simulating ${numYears} years from ${startYear} to ${startYear + numYears - 1}`);
+emit('\nThriftLens — Carry-Forward Simulation');
+emit(`Profile: ${MONTHLY.length} monthly, ${ANNUAL.length} annual, ${ESTIMATES.length} estimate(s)`);
+emit(`Simulating ${numYears} years from ${startYear} to ${startYear + numYears - 1}`);
 
 let currentRecords = seedYear0(startYear);
 
@@ -256,6 +274,10 @@ for (let i = 0; i < numYears; i++) {
   currentRecords = proposal.map(({ origin: _o, discretionary: _d, ...rest }) => rest);
 }
 
-console.log('\n' + hr('═'));
-console.log('  Simulation complete.');
-console.log(hr('═') + '\n');
+emit('\n' + hr('═'));
+emit('  Simulation complete.');
+emit(hr('═') + '\n');
+
+stream.end(() => {
+  process.stderr.write(`Transcript written to simulation.txt\n`);
+});
