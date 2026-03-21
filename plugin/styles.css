@@ -118,9 +118,57 @@
     display: none;
   }
 
-  /* ── Annual tables: hide Remaining Commitment column ── */
-  .tl-dashboard .tl-annual-summary-table th:nth-child(4),
-  .tl-dashboard .tl-annual-summary-table td:nth-child(4),
+  /* ── Annual summary: vertical layout ── */
+  .tl-dashboard .tl-annual-summary-table,
+  .tl-dashboard .tl-annual-summary-table tbody {
+    display: block;
+  }
+  .tl-dashboard .tl-annual-summary-table thead,
+  .tl-dashboard .tl-annual-summary-table tfoot {
+    display: none;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody tr {
+    display: block;
+    padding: 0.75em 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+  .tl-dashboard .tl-annual-summary-table tbody tr:last-child {
+    border-bottom: none;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody td:first-child {
+    display: block;
+    font-size: 0.65em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    text-align: left;
+    padding: 0 0 0.4em;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(2),
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(3),
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(4) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 1em;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 0.1em 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(2)::before,
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(3)::before,
+  .tl-dashboard .tl-annual-summary-table tbody td:nth-child(4)::before {
+    content: attr(data-label);
+    font-size: 0.75em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  /* ── Annual detail table: hide Remaining Commitment column ── */
   .tl-dashboard .tl-detail-table th:nth-child(4),
   .tl-dashboard .tl-detail-table td:nth-child(4) {
     display: none;
@@ -321,6 +369,21 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   border-bottom: none;
+}
+
+/* ─── Annual summary table ─────────────────────────────────────── */
+
+.tl-dashboard .tl-annual-summary-table tbody td:first-child {
+  font-size: 0.88em;
+  color: var(--text-muted);
+}
+
+.tl-dashboard .tl-annual-summary-table tbody td:not(:first-child),
+.tl-dashboard .tl-annual-summary-table tfoot td:not(:first-child) {
+  font-size: 1.15em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* ─── Data tables ──────────────────────────────────────────────── */

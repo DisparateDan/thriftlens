@@ -215,9 +215,9 @@ export function renderAnnual(
   rows.forEach(({ label, total, spent }) => {
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: label });
-    tr.createEl('td', { text: fmt(total, currency) });
-    tr.createEl('td', { text: fmt(spent, currency) });
-    tr.createEl('td', { text: fmt(total - spent, currency) });
+    tr.createEl('td', { text: fmt(total, currency),           attr: { 'data-label': 'Total' } });
+    tr.createEl('td', { text: fmt(spent, currency),           attr: { 'data-label': 'Spent' } });
+    tr.createEl('td', { text: fmt(total - spent, currency),   attr: { 'data-label': 'Remaining' } });
   });
   const tTotal = rows.reduce((s, r) => s + r.total, 0);
   const tSpent = rows.reduce((s, r) => s + r.spent, 0);

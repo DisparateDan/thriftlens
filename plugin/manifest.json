@@ -1,9 +1,10 @@
 {
   "id": "thriftlens",
   "name": "ThriftLens",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "minAppVersion": "1.4.0",
   "description": "Personal cashflow dashboard",
   "author": "Dan",
-  "isDesktopOnly": false
+  "isDesktopOnly": false,
+  "fundingUrl": "https://buymeacoffee.com/disparatedan"
 }
