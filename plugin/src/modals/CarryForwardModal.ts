@@ -3,11 +3,7 @@ import type ThriftLensPlugin from '../main';
 import type { BudgetEntry } from '../types';
 import { loadYear, getAvailableYears } from '../loader';
 import { serialiseEntry } from '../parser';
-
-interface ProposedEntry extends BudgetEntry {
-  origin:        string;
-  discretionary: boolean;
-}
+import { buildProposal, type ProposedEntry } from '../carryForward';
 
 export class CarryForwardModal extends Modal {
   private plugin:      ThriftLensPlugin;
@@ -89,52 +85,8 @@ export class CarryForwardModal extends Modal {
     const sourceRecords = await loadYear(this.app, this.plugin.settings.dataFolder, this.sourceYear);
     loading.remove();
 
-    this.proposed = this.buildProposal(sourceRecords);
+    this.proposed = buildProposal(sourceRecords, this.sourceYear, this.targetYear);
     this.renderBody(contentEl);
-  }
-
-  // ── Proposal builder ────────────────────────────────────────
-
-  private buildProposal(sourceRecords: BudgetEntry[]): ProposedEntry[] {
-    const actualsByCat: Record<string, number> = {};
-    sourceRecords
-      .filter(r => r.spend_type === 'actual_spend')
-      .forEach(r => {
-        actualsByCat[r.spend_category] = (actualsByCat[r.spend_category] || 0) + r.amount;
-      });
-
-    const jan1 = new Date(this.targetYear, 0, 1);
-    const proposed: ProposedEntry[] = [];
-
-    for (const r of sourceRecords) {
-      if (r.spend_type === 'planned_known' && r.periodicity === 'monthly') {
-        proposed.push({
-          ...r, date: jan1, valid_until: null,
-          origin: `carried from ${this.sourceYear}`,
-          discretionary: false,
-        });
-
-      } else if (r.spend_type === 'planned_known' && r.periodicity === 'annual') {
-        const hasActuals = r.spend_category in actualsByCat;
-        proposed.push({
-          ...r, date: jan1, valid_until: null,
-          amount: hasActuals ? actualsByCat[r.spend_category] : r.amount,
-          origin: hasActuals
-            ? `seeded from ${this.sourceYear} actuals`
-            : `carried from ${this.sourceYear} (no actuals found)`,
-          discretionary: false,
-        });
-
-      } else if (r.spend_type === 'planned_estimate') {
-        proposed.push({
-          ...r, date: jan1, valid_until: null,
-          origin: `discretionary — review before keeping`,
-          discretionary: true,
-        });
-      }
-    }
-
-    return proposed;
   }
 
   // ── Rendering ───────────────────────────────────────────────

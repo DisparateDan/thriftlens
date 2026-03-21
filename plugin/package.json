@@ -8,12 +8,17 @@
     "dev": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
     "deploy": "node esbuild.config.mjs production && node deploy.mjs",
-    "dev:deploy": "node deploy.mjs --watch"
+    "dev:deploy": "node deploy.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate": "node tests/generate.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "esbuild": "^0.20.0",
     "obsidian": "latest",
-    "typescript": "^5.4.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.0"
   }
 }
