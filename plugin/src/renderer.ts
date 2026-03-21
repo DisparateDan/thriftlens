@@ -184,12 +184,14 @@ function renderDetailTable(
 export function renderAnnual(
   blueContainer: HTMLElement,
   purpleContainer: HTMLElement,
+  greenContainer: HTMLElement,
   records: BudgetEntry[],
   year: number,
   currency: string,
 ): void {
   blueContainer.empty();
   purpleContainer.empty();
+  greenContainer.empty();
 
   const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
   const spend     = records.filter(r => r.spend_type === 'actual_spend');
@@ -243,4 +245,35 @@ export function renderAnnual(
     year, currency,
     entries => entries.reduce((s, r) => s + monthsToDate(r, year) * r.amount, 0),
   );
+
+  // Unplanned: actual_spend categories with no committed counterpart
+  const committedCats = new Set(committed.map(r => r.spend_category));
+  const unplannedByCat = new Map<string, { total: number; count: number }>();
+  for (const r of spend) {
+    if (!committedCats.has(r.spend_category)) {
+      const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
+      entry.total += r.amount;
+      entry.count += 1;
+      unplannedByCat.set(r.spend_category, entry);
+    }
+  }
+
+  if (unplannedByCat.size > 0) {
+    const table = greenContainer.createEl('table', { cls: 'tl-table' });
+    const hr    = table.createEl('thead').createEl('tr');
+    ['Category', 'Transactions', 'Spend To Date'].forEach(h => hr.createEl('th', { text: h }));
+    const tbody = table.createEl('tbody');
+    let grandTotal = 0;
+    for (const [cat, { total, count }] of [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0]))) {
+      grandTotal += total;
+      const tr = tbody.createEl('tr');
+      tr.createEl('td', { text: fmtCat(cat) });
+      tr.createEl('td', { text: String(count) });
+      tr.createEl('td', { text: fmt(total, currency) });
+    }
+    const tfr = table.createEl('tfoot').createEl('tr');
+    ['Total', '', fmt(grandTotal, currency)].forEach(v => tfr.createEl('td', { text: v }));
+  } else {
+    greenContainer.createEl('p', { text: 'No unplanned spend this year.', cls: 'tl-empty' });
+  }
 }
