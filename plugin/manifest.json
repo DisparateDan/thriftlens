@@ -4,7 +4,8 @@
   "version": "0.3.6",
   "minAppVersion": "1.4.0",
   "description": "Personal cashflow dashboard",
-  "author": "Dan",
+  "author": "Dan Pusceddu",
+  "authorUrl": "https://github.com/DisparateDan",
   "isDesktopOnly": false,
   "fundingUrl": "https://buymeacoffee.com/disparatedan"
 }
