@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Setting, normalizePath } from 'obsidian';
+import { App, Modal, Notice, Platform, Setting, normalizePath } from 'obsidian';
 import type ThriftLensPlugin from '../main';
 
 export class CreateRecordModal extends Modal {
@@ -15,6 +15,13 @@ export class CreateRecordModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl('h2', { text: 'Create Record' });
+
+    if (Platform.isMobile) {
+      contentEl.style.paddingBottom = '50vh';
+      contentEl.addEventListener('focus', e => {
+        (e.target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, true);
+    }
 
     new Setting(contentEl)
       .setName('Year')

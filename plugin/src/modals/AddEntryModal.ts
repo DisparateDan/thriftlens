@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Setting, normalizePath } from 'obsidian';
+import { App, Modal, Notice, Platform, Setting, normalizePath } from 'obsidian';
 import type ThriftLensPlugin from '../main';
 import type { BudgetEntry } from '../types';
 import { serialiseEntry } from '../parser';
@@ -32,7 +32,7 @@ export class AddEntryModal extends Modal {
     dateStr:        todayStr(),
     amount:         '',
     spend_type:     'actual_spend',
-    periodicity:    'monthly',
+    periodicity:    'annual',
     spend_category: '',
     description:    '',
     validUntilStr:  '',
@@ -47,6 +47,13 @@ export class AddEntryModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl('h2', { text: 'Log Entry' });
+
+    if (Platform.isMobile) {
+      contentEl.style.paddingBottom = '50vh';
+      contentEl.addEventListener('focus', e => {
+        (e.target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, true);
+    }
 
     const categories = await this.loadCategories();
 
@@ -65,23 +72,6 @@ export class AddEntryModal extends Modal {
     amountSetting.addText(t => t
       .setPlaceholder('0.00')
       .onChange(v => { this.form.amount = v; }));
-
-    new Setting(contentEl)
-      .setName('Spend type')
-      .addDropdown(d => d
-        .addOption('actual_spend',     'Actual spend')
-        .addOption('planned_known',    'Planned known')
-        .addOption('planned_estimate', 'Planned estimate')
-        .setValue(this.form.spend_type)
-        .onChange(v => { this.form.spend_type = v as BudgetEntry['spend_type']; }));
-
-    new Setting(contentEl)
-      .setName('Periodicity')
-      .addDropdown(d => d
-        .addOption('monthly', 'Monthly')
-        .addOption('annual',  'Annual')
-        .setValue(this.form.periodicity)
-        .onChange(v => { this.form.periodicity = v as BudgetEntry['periodicity']; }));
 
     // Spend category with datalist for existing slugs
     const catSetting = new Setting(contentEl)
@@ -105,12 +95,44 @@ export class AddEntryModal extends Modal {
         .setPlaceholder('Brief description')
         .onChange(v => { this.form.description = v; }));
 
+    let periodicityRow: Setting;
+    let validUntilRow: Setting;
+
+    const updatePlannedFields = (spendType: BudgetEntry['spend_type']) => {
+      const planned = spendType !== 'actual_spend';
+      periodicityRow.settingEl.style.display = planned ? '' : 'none';
+      validUntilRow.settingEl.style.display  = planned ? '' : 'none';
+    };
+
     new Setting(contentEl)
+      .setName('Spend type')
+      .addDropdown(d => d
+        .addOption('actual_spend',     'Actual spend')
+        .addOption('planned_known',    'Planned known')
+        .addOption('planned_estimate', 'Planned estimate')
+        .setValue(this.form.spend_type)
+        .onChange(v => {
+          this.form.spend_type = v as BudgetEntry['spend_type'];
+          updatePlannedFields(this.form.spend_type);
+        }));
+
+    periodicityRow = new Setting(contentEl)
+      .setName('Periodicity')
+      .addDropdown(d => d
+        .addOption('annual',  'Annual')
+        .addOption('monthly', 'Monthly')
+        .setValue(this.form.periodicity)
+        .onChange(v => { this.form.periodicity = v as BudgetEntry['periodicity']; }));
+
+    validUntilRow = new Setting(contentEl)
       .setName('Valid until')
       .setDesc('Optional. Only for mid-year expiry. Format: YYYY-MM-DD')
       .addText(t => t
         .setPlaceholder('YYYY-MM-DD')
         .onChange(v => { this.form.validUntilStr = v.trim(); }));
+
+    // Set initial visibility (default spend_type is actual_spend → hide planned fields)
+    updatePlannedFields(this.form.spend_type);
 
     new Setting(contentEl)
       .addButton(b => b
