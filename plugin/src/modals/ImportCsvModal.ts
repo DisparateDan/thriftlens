@@ -3,28 +3,10 @@ import type ThriftLensPlugin from '../main';
 import type { BudgetEntry } from '../types';
 import { parseDate, serialiseEntry } from '../parser';
 import { loadYear } from '../loader';
+import { splitCsvRow } from '../csvUtils';
 
 // ── CSV parsing ───────────────────────────────────────────────────
-
-function parseCsvRow(line: string): string[] {
-  const fields: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
-      fields.push(current.trim());
-      current = '';
-    } else {
-      current += ch;
-    }
-  }
-  fields.push(current.trim());
-  return fields;
-}
+// splitCsvRow imported from ../csvUtils
 
 interface ParseResult {
   entries:     BudgetEntry[];
@@ -35,7 +17,7 @@ function parseCsv(content: string): ParseResult {
   const lines = content.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) return { entries: [], parseErrors: ['File appears to be empty or has no data rows'] };
 
-  const headers     = parseCsvRow(lines[0]).map(h => h.toLowerCase().trim());
+  const headers     = splitCsvRow(lines[0]).map(h => h.toLowerCase().trim());
   const col         = (name: string) => headers.indexOf(name);
   const dateIdx     = col('date');
   const amountIdx   = col('amount');
@@ -56,7 +38,7 @@ function parseCsv(content: string): ParseResult {
   const parseErrors: string[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const row     = parseCsvRow(lines[i]);
+    const row     = splitCsvRow(lines[i]);
     const rowNum  = i + 1;
     const get     = (idx: number) => (row[idx] ?? '').trim();
 

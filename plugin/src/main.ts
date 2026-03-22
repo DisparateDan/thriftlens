@@ -5,6 +5,7 @@ import { AddEntryModal }     from './modals/AddEntryModal';
 import { CreateRecordModal } from './modals/CreateRecordModal';
 import { CarryForwardModal } from './modals/CarryForwardModal';
 import { ImportCsvModal }    from './modals/ImportCsvModal';
+import { ExportCsvModal }    from './modals/ExportCsvModal';
 import { loadYear }          from './loader';
 import { generateReport }    from './exporter';
 
@@ -52,6 +53,12 @@ export default class ThriftLensPlugin extends Plugin {
       id:       'export-report',
       name:     'Export report',
       callback: () => this.exportReport(),
+    });
+
+    this.addCommand({
+      id:       'export-csv',
+      name:     'Export to CSV',
+      callback: () => new ExportCsvModal(this.app, this).open(),
     });
 
     this.addSettingTab(new ThriftLensSettingTab(this.app, this));

@@ -36,14 +36,14 @@ export function parseRecordsBlock(text: string): BudgetEntry[] {
 
 // ── Serialiser ────────────────────────────────────────────────────────────────
 
-function fmtDate(d: Date): string {
+export function fmtDate(d: Date): string {
   const y   = d.getFullYear();
   const m   = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
-function fmtAmount(n: number): string {
+export function fmtAmount(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(2);
 }
 
