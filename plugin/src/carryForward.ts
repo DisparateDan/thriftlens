@@ -49,7 +49,7 @@ export function buildProposal(
         discretionary: false,
       });
     }
-    // actual_spend records are not carried forward
+    // actual_spend and exceptional records are not carried forward
   }
 
   return proposed;

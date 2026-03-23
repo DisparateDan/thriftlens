@@ -69,8 +69,9 @@ const CSS = `
     padding-bottom: 0.5em;
     border-bottom: 1px solid #eee;
   }
-  .section--blue  { border-left: 3px solid rgba(100,140,220,0.7); }
+  .section--blue   { border-left: 3px solid rgba(100,140,220,0.7); }
   .section--purple { border-left: 3px solid rgba(160,100,220,0.7); }
+  .section--red    { border-left: 3px solid rgba(220,80,80,0.7); }
   .subsection-label {
     font-size: 0.68em;
     font-weight: 700;
@@ -163,7 +164,7 @@ function renderMonthlySection(
 
   const annualInstallment = annualEstimates.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
-  const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
+  const totalSpent        = monthSpend.filter(r => r.spend_type === 'actual_spend').reduce((s, r) => s + r.amount, 0);
 
   const summary = summaryTable([
     { label: 'Annual installment', value: fmt(annualInstallment, currency) },
@@ -211,11 +212,13 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
   const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
+  const exceptionals  = records.filter(r => r.spend_type === 'exceptional');
 
   const spendByCat: Record<string, number> = {};
   actuals.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
+  const exceptionalTotal = exceptionals.reduce((s, r) => s + r.amount, 0);
 
   const rows = [
     {
@@ -228,6 +231,11 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
       spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },
+    ...(exceptionals.length > 0 ? [{
+      label: 'Exceptional',
+      total: exceptionalTotal,
+      spent: exceptionalTotal,
+    }] : []),
   ];
 
   const tTotal = rows.reduce((s, r) => s + r.total, 0);
@@ -258,6 +266,19 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
 
   const detailHeaders = ['Category', 'Total', 'Spend to date', 'Remaining'];
 
+  const exceptionalRows = exceptionals.map(r => [
+    r.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+    r.description,
+    fmtCat(r.spend_category),
+    fmt(r.amount, currency),
+  ]);
+
+  const exceptionalSection = exceptionals.length > 0 ? `
+    <div class="section section--red">
+      <p class="section-title">Exceptional spend</p>
+      ${dataTable(['Date', 'Description', 'Category', 'Amount'], exceptionalRows, ['', '', 'Total', fmt(exceptionalTotal, currency)])}
+    </div>` : '';
+
   return `
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
@@ -268,7 +289,8 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     <div class="section section--purple">
       <p class="section-title">Monthly fixed detail</p>
       ${dataTable(detailHeaders, monthlyDetailRows)}
-    </div>`;
+    </div>
+    ${exceptionalSection}`;
 }
 
 // ── Entry point ───────────────────────────────────────────────────

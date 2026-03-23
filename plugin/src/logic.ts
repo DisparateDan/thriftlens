@@ -54,10 +54,10 @@ export function monthsToDate(record: BudgetEntry, year: number): number {
   return end.getMonth() - start.getMonth() + 1;
 }
 
-// Actual spend records falling within a given year+month (0-indexed).
+// Actual and exceptional spend records falling within a given year+month (0-indexed).
 export function spendInMonth(records: BudgetEntry[], year: number, month: number): BudgetEntry[] {
   return records.filter(r =>
-    r.spend_type === 'actual_spend' &&
+    (r.spend_type === 'actual_spend' || r.spend_type === 'exceptional') &&
     r.date.getFullYear() === year &&
     r.date.getMonth() === month
   );

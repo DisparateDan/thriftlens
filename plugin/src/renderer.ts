@@ -117,7 +117,7 @@ export function renderMonth(
 
   const annualInstallment = annualEstimates.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
-  const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
+  const totalSpent        = monthSpend.filter(r => r.spend_type === 'actual_spend').reduce((s, r) => s + r.amount, 0);
 
   renderSummaryCards(cardsContainer, [
     { label: 'Annual installment', value: fmt(annualInstallment, currency) },
@@ -200,6 +200,7 @@ function renderAnnualSummaryTable(
   const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
+  const exceptionals  = records.filter(r => r.spend_type === 'exceptional');
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
 
@@ -214,6 +215,11 @@ function renderAnnualSummaryTable(
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
       spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },
+    ...(exceptionals.length > 0 ? [{
+      label: 'Exceptional',
+      total: exceptionals.reduce((s, r) => s + r.amount, 0),
+      spent: exceptionals.reduce((s, r) => s + r.amount, 0),
+    }] : []),
   ];
 
   const table = parent.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
@@ -269,6 +275,7 @@ export function renderAnnual(
   blueContainer: HTMLElement,
   purpleContainer: HTMLElement,
   greenContainer: HTMLElement,
+  redContainer: HTMLElement,
   records: BudgetEntry[],
   year: number,
   currency: string,
@@ -276,10 +283,12 @@ export function renderAnnual(
   blueContainer.empty();
   purpleContainer.empty();
   greenContainer.empty();
+  redContainer.empty();
 
   const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
+  const exceptionals  = records.filter(r => r.spend_type === 'exceptional');
 
   // Summary table
   renderAnnualSummaryTable(blueContainer, records, year, currency);
@@ -335,5 +344,28 @@ export function renderAnnual(
     ['Total', '', fmt(grandTotal, currency)].forEach(v => tfr.createEl('td', { text: v }));
   } else {
     greenContainer.createEl('p', { text: 'No unplanned spend this year.', cls: 'tl-empty' });
+  }
+
+  // Exceptional spend
+  if (exceptionals.length > 0) {
+    const table = redContainer.createEl('table', { cls: 'tl-table' });
+    const hr    = table.createEl('thead').createEl('tr');
+    ['Date', 'Description', 'Category', 'Amount'].forEach(h => hr.createEl('th', { text: h }));
+    const tbody = table.createEl('tbody');
+    let grandTotal = 0;
+    [...exceptionals]
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .forEach(r => {
+        grandTotal += r.amount;
+        const tr = tbody.createEl('tr');
+        tr.createEl('td', { text: r.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) });
+        tr.createEl('td', { text: r.description });
+        tr.createEl('td', { text: fmtCat(r.spend_category) });
+        tr.createEl('td', { text: fmt(r.amount, currency) });
+      });
+    const tfr = table.createEl('tfoot').createEl('tr');
+    ['', '', 'Total', fmt(grandTotal, currency)].forEach(v => tfr.createEl('td', { text: v }));
+  } else {
+    redContainer.createEl('p', { text: 'No exceptional spend this year.', cls: 'tl-empty' });
   }
 }

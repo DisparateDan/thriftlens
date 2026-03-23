@@ -41,6 +41,7 @@ export class ThriftLensView extends ItemView {
   private annualBlueContent!:   HTMLElement;
   private annualPurpleContent!: HTMLElement;
   private annualGreenContent!:  HTMLElement;
+  private annualRedContent!:    HTMLElement;
 
   constructor(leaf: WorkspaceLeaf, plugin: ThriftLensPlugin) {
     super(leaf);
@@ -122,6 +123,11 @@ export class ThriftLensView extends ItemView {
     annualGreenSection.createEl('div', { cls: 'tl-section-header' })
       .createEl('span', { text: 'Unplanned spending', cls: 'tl-section-title' });
     this.annualGreenContent = annualGreenSection.createEl('div');
+
+    const annualRedSection = this.annualOuter.createEl('div', { cls: 'tl-section tl-section--red' });
+    annualRedSection.createEl('div', { cls: 'tl-section-header' })
+      .createEl('span', { text: 'Exceptional spend', cls: 'tl-section-title' });
+    this.annualRedContent = annualRedSection.createEl('div');
 
     // ── Year on Year outer ─────────────────────────────────────
     this.yoyOuter   = root.createEl('div', { cls: 'tl-tab-pane' });
@@ -237,7 +243,7 @@ export class ThriftLensView extends ItemView {
       renderCommitmentsTable(this.commitContent, monthRecords, year, currency);
 
       renderAnnual(
-        this.annualBlueContent, this.annualPurpleContent, this.annualGreenContent,
+        this.annualBlueContent, this.annualPurpleContent, this.annualGreenContent, this.annualRedContent,
         annualRecords, annualYear, currency,
       );
 

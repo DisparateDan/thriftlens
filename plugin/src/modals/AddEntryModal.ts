@@ -108,9 +108,10 @@ export class AddEntryModal extends Modal {
     new Setting(contentEl)
       .setName('Spend type')
       .addDropdown(d => d
-        .addOption('actual_spend',  'Actual spend')
-        .addOption('monthly_fixed', 'Monthly fixed')
+        .addOption('actual_spend',    'Actual spend')
+        .addOption('monthly_fixed',   'Monthly fixed')
         .addOption('annual_estimate', 'Annual estimate')
+        .addOption('exceptional',     'Exceptional')
         .setValue(this.form.spend_type)
         .onChange(v => {
           this.form.spend_type = v as BudgetEntry['spend_type'];
@@ -125,7 +126,7 @@ export class AddEntryModal extends Modal {
         .onChange(v => { this.form.validUntilStr = v.trim(); }));
 
     const updateVisibility = (spendType: BudgetEntry['spend_type']) => {
-      const isActual        = spendType === 'actual_spend';
+      const isActual        = spendType === 'actual_spend' || spendType === 'exceptional';
       const isMonthlyFixed  = spendType === 'monthly_fixed';
       dateSetting.settingEl.style.display     = isActual       ? '' : 'none';
       yearSetting.settingEl.style.display     = isActual       ? 'none' : '';
@@ -158,7 +159,7 @@ export class AddEntryModal extends Modal {
     const { dateStr, yearStr, amount, spend_type, spend_category, description, validUntilStr } = this.form;
 
     let date: Date;
-    if (spend_type === 'actual_spend') {
+    if (spend_type === 'actual_spend' || spend_type === 'exceptional') {
       const parsed = parseDateInput(dateStr);
       if (!parsed) { new Notice('Invalid date — use DD-MM-YYYY'); return; }
       date = parsed;
