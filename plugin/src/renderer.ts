@@ -131,6 +131,7 @@ function renderDetailTable(
   year: number,
   currency: string,
   spentFn: (entries: BudgetEntry[]) => number,
+  subSpentFn?: (entry: BudgetEntry) => number,
 ): void {
   const byCategory = new Map<string, BudgetEntry[]>();
   for (const r of records) {
@@ -163,9 +164,16 @@ function renderDetailTable(
         .map(r => {
           const sub = tbody.createEl('tr', { cls: 'tl-detail-sub' });
           sub.createEl('td', { text: r.description, cls: 'tl-detail-sub-desc' });
-          sub.createEl('td', { text: fmt(annualValue(r, year), currency) });
-          sub.createEl('td', { text: '—' });
-          sub.createEl('td', { text: '—' });
+          const subTotal = annualValue(r, year);
+          sub.createEl('td', { text: fmt(subTotal, currency) });
+          if (subSpentFn) {
+            const subSpent = subSpentFn(r);
+            sub.createEl('td', { text: fmt(subSpent, currency) });
+            sub.createEl('td', { text: fmt(subTotal - subSpent, currency) });
+          } else {
+            sub.createEl('td', { text: '—' });
+            sub.createEl('td', { text: '—' });
+          }
           return sub;
         });
 
@@ -282,6 +290,7 @@ export function renderAnnual(
     monthlyFixeds,
     year, currency,
     entries => entries.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
+    r => r.amount * monthsToDate(r, year),
   );
 
   // Unplanned: actuals with no plan counterpart

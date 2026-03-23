@@ -1,7 +1,7 @@
 {
   "id": "thriftlens",
   "name": "ThriftLens",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "minAppVersion": "1.4.0",
   "description": "Personal cashflow dashboard",
   "author": "Dan Pusceddu",
