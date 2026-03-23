@@ -66,7 +66,7 @@ export class AddEntryModal extends Modal {
         .setValue(this.form.dateStr)
         .onChange(v => { this.form.dateStr = v; }));
 
-    // Year (monthly_fixed / annual_budget only)
+    // Year (monthly_fixed / annual_estimate only)
     const yearSetting = new Setting(contentEl)
       .setName('Year')
       .addText(t => t
@@ -110,7 +110,7 @@ export class AddEntryModal extends Modal {
       .addDropdown(d => d
         .addOption('actual_spend',  'Actual spend')
         .addOption('monthly_fixed', 'Monthly fixed')
-        .addOption('annual_budget', 'Annual budget')
+        .addOption('annual_estimate', 'Annual estimate')
         .setValue(this.form.spend_type)
         .onChange(v => {
           this.form.spend_type = v as BudgetEntry['spend_type'];

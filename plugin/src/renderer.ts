@@ -106,11 +106,11 @@ export function renderMonth(
     dayInfoEl.style.display = 'none';
   }
 
-  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const monthSpend    = spendInMonth(records, year, month);
 
-  const annualInstallment = annualBudgets.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const annualInstallment = annualEstimates.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
@@ -184,18 +184,18 @@ function renderAnnualSummaryTable(
   year: number,
   currency: string,
 ): void {
-  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
 
-  const annualBudgetCats = new Set(annualBudgets.map(r => r.spend_category));
+  const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
   const monthlyFixedCats = new Set(monthlyFixeds.map(r => r.spend_category));
 
   const rows = [
     {
-      label: 'Annual Budgets',
-      total: annualBudgets.reduce((s, r) => s + annualValue(r, year), 0),
-      spent: actuals.filter(r => annualBudgetCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
+      label: 'Annual Estimates',
+      total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
       label: 'Monthly Fixed',
@@ -260,7 +260,7 @@ export function renderAnnual(
   purpleContainer.empty();
   greenContainer.empty();
 
-  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
 
@@ -273,8 +273,8 @@ export function renderAnnual(
 
   // Detail breakdowns
   renderDetailTable(
-    blueContainer, 'Annual Budgets Detail',
-    annualBudgets,
+    blueContainer, 'Annual Estimates Detail',
+    annualEstimates,
     year, currency,
     entries => spendByCat[entries[0].spend_category] || 0,
   );
@@ -287,7 +287,7 @@ export function renderAnnual(
 
   // Unplanned: actuals with no plan counterpart
   const allPlanCats = new Set([
-    ...annualBudgets.map(r => r.spend_category),
+    ...annualEstimates.map(r => r.spend_category),
     ...monthlyFixeds.map(r => r.spend_category),
   ]);
   const unplannedByCat = new Map<string, { total: number; count: number }>();

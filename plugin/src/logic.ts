@@ -18,7 +18,7 @@ export function monthsActiveInYear(record: BudgetEntry, year: number): number {
 
 // Annualised value of a planned record.
 export function annualValue(record: BudgetEntry, year: number): number {
-  if (record.spend_type === 'annual_budget') {
+  if (record.spend_type === 'annual_estimate') {
     const yearStart = new Date(year, 0, 1);
     const yearEnd   = new Date(year, 11, 31);
     if (record.date > yearEnd) return 0;
@@ -35,7 +35,7 @@ export function monthlyValue(record: BudgetEntry, year: number, month: number): 
   const monthEnd   = new Date(year, month + 1, 0);
   if (record.date > monthEnd) return 0;
   if (record.valid_until && record.valid_until < monthStart) return 0;
-  return record.spend_type === 'annual_budget' ? record.amount / 12 : record.amount;
+  return record.spend_type === 'annual_estimate' ? record.amount / 12 : record.amount;
 }
 
 // Months a monthly_fixed record has been active up to and including the current month.

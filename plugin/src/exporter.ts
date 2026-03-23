@@ -157,11 +157,11 @@ function renderMonthlySection(
   month: number,
   currency: string,
 ): string {
-  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const monthSpend    = spendInMonth(records, year, month);
 
-  const annualInstallment = annualBudgets.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const annualInstallment = annualEstimates.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
   const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
@@ -208,21 +208,21 @@ function renderMonthlySection(
 // ── Annual section ────────────────────────────────────────────────
 
 function renderAnnualSection(records: BudgetEntry[], year: number, currency: string): string {
-  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
   const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
 
   const spendByCat: Record<string, number> = {};
   actuals.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
 
-  const annualBudgetCats = new Set(annualBudgets.map(r => r.spend_category));
+  const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
   const monthlyFixedCats = new Set(monthlyFixeds.map(r => r.spend_category));
 
   const rows = [
     {
-      label: 'Annual Budgets',
-      total: annualBudgets.reduce((s, r) => s + annualValue(r, year), 0),
-      spent: actuals.filter(r => annualBudgetCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
+      label: 'Annual Estimates',
+      total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
       label: 'Monthly Fixed',
@@ -243,8 +243,8 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)],
   );
 
-  // Annual budget detail
-  const annualDetailRows = annualBudgets.map(r => {
+  // Annual estimate detail
+  const annualDetailRows = annualEstimates.map(r => {
     const total = annualValue(r, year);
     const spent = spendByCat[r.spend_category] || 0;
     return [fmtCat(r.spend_category), fmt(total, currency), spent ? fmt(spent, currency) : '—', fmt(total - spent, currency)];
@@ -263,7 +263,7 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
       ${annualSummaryTable}
-      <p class="subsection-label">Annual Budgets Detail</p>
+      <p class="subsection-label">Annual Estimates Detail</p>
       ${dataTable(detailHeaders, annualDetailRows)}
     </div>
     <div class="section section--purple">

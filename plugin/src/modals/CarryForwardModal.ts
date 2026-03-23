@@ -175,7 +175,7 @@ export class CarryForwardModal extends Modal {
 
     // Group by spend_type for canonical section ordering
     const sections: Record<string, BudgetEntry[]> = {
-      annual_budget: [],
+      annual_estimate: [],
       monthly_fixed: [],
     };
     for (const e of this.proposed) {
@@ -183,8 +183,8 @@ export class CarryForwardModal extends Modal {
     }
 
     const yamlLines: string[] = [
-      '# ── Annual budget ──────────────────────────────────',
-      ...sections['annual_budget'].map(e => serialiseEntry(e)),
+      '# ── Annual estimate ──────────────────────────────────',
+      ...sections['annual_estimate'].map(e => serialiseEntry(e)),
       '',
       '# ── Monthly fixed ─────────────────────────────────',
       ...sections['monthly_fixed'].map(e => serialiseEntry(e)),

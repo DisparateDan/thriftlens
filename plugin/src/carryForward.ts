@@ -11,7 +11,7 @@ export interface ProposedEntry extends BudgetEntry {
  *
  * Rules:
  *   monthly_fixed  → clone as-is into target year
- *   annual_budget  → seed amount from prior year actuals for the same category;
+ *   annual_estimate  → seed amount from prior year actuals for the same category;
  *                    fall back to source amount if no actuals found
  *   actual_spend   → not carried forward
  */
@@ -38,7 +38,7 @@ export function buildProposal(
         discretionary: false,
       });
 
-    } else if (r.spend_type === 'annual_budget') {
+    } else if (r.spend_type === 'annual_estimate') {
       const hasActuals = r.spend_category in actualsByCat;
       proposed.push({
         ...r, date: jan1, valid_until: null,

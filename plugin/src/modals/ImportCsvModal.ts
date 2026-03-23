@@ -50,7 +50,7 @@ function parseCsv(content: string): ParseResult {
 
     if (!date)         { parseErrors.push(`Row ${rowNum}: invalid date "${get(dateIdx)}"`); continue; }
     if (isNaN(amount)) { parseErrors.push(`Row ${rowNum}: invalid amount "${get(amountIdx)}"`); continue; }
-    if (!['monthly_fixed', 'annual_budget', 'actual_spend'].includes(type)) {
+    if (!['monthly_fixed', 'annual_estimate', 'actual_spend'].includes(type)) {
       parseErrors.push(`Row ${rowNum}: invalid spend_type "${type}"`); continue;
     }
     if (!cat) { parseErrors.push(`Row ${rowNum}: missing spend_category`); continue; }
@@ -65,13 +65,13 @@ function parseCsv(content: string): ParseResult {
 // ── Section-aware insertion ───────────────────────────────────────
 
 const SECTION_MARKERS: Record<BudgetEntry['spend_type'], string> = {
-  annual_budget: '# ── Annual budget',
+  annual_estimate: '# ── Annual estimate',
   monthly_fixed: '# ── Monthly fixed',
   actual_spend:  '# ── Actual spend',
 };
 
 // Process bottom-to-top so earlier insertion positions stay valid.
-const INSERTION_ORDER: BudgetEntry['spend_type'][] = ['actual_spend', 'monthly_fixed', 'annual_budget'];
+const INSERTION_ORDER: BudgetEntry['spend_type'][] = ['actual_spend', 'monthly_fixed', 'annual_estimate'];
 
 function insertBySection(content: string, entries: BudgetEntry[]): string {
   const groups = new Map<BudgetEntry['spend_type'], BudgetEntry[]>(
@@ -224,14 +224,14 @@ export class ImportCsvModal extends Modal {
 
       const plannedKeys = new Set(
         existing
-          .filter(e => e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_budget')
+          .filter(e => e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_estimate')
           .map(plannedKey),
       );
 
       // Partition: append vs skip
       const toAppend: BudgetEntry[] = [];
       for (const e of yearEntries) {
-        if (e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_budget') {
+        if (e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_estimate') {
           const key = plannedKey(e);
           if (plannedKeys.has(key)) {
             result.skipped.push({ year, spend_category: e.spend_category, periodicity: e.periodicity });
@@ -248,7 +248,7 @@ export class ImportCsvModal extends Modal {
         const scaffold = [
           '---', 'tl_type: register', `year: ${year}`, '---', '',
           '```yaml',
-          '# ── Annual budget ──────────────────────────────────', '',
+          '# ── Annual estimate ──────────────────────────────────', '',
           '# ── Monthly fixed ─────────────────────────────────', '',
           '# ── Actual spend ──────────────────────────────────',
           '```', '',
