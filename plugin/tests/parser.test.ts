@@ -30,29 +30,25 @@ describe('parseDate', () => {
 const BLOCK = `
 - date: 2025-01-01
   amount: 850
-  spend_type: planned_known
-  periodicity: monthly
+  spend_type: monthly_fixed
   spend_category: rent
   description: Monthly rent
 
 - date: 2025-01-01
   amount: 1200
-  spend_type: planned_known
-  periodicity: annual
+  spend_type: annual_estimate
   spend_category: insurance
   description: Home insurance
 
 - date: 2025-03-10
   amount: 94.80
   spend_type: actual_spend
-  periodicity: annual
   spend_category: groceries
   description: Supermarket run
 
 - date: 2025-06-01
   amount: 500
-  spend_type: planned_estimate
-  periodicity: annual
+  spend_type: annual_estimate
   spend_category: repairs
   description: Boiler service estimate
   valid_until: 2025-12-31
@@ -65,13 +61,19 @@ describe('parseRecordsBlock', () => {
     expect(records).toHaveLength(4);
   });
 
-  it('parses a monthly planned_known correctly', () => {
+  it('parses a monthly_fixed record correctly', () => {
     const r = records[0];
-    expect(r.spend_type).toBe('planned_known');
-    expect(r.periodicity).toBe('monthly');
+    expect(r.spend_type).toBe('monthly_fixed');
     expect(r.amount).toBe(850);
     expect(r.spend_category).toBe('rent');
     expect(r.valid_until).toBeNull();
+  });
+
+  it('parses an annual_estimate correctly', () => {
+    const r = records[1];
+    expect(r.spend_type).toBe('annual_estimate');
+    expect(r.amount).toBe(1200);
+    expect(r.spend_category).toBe('insurance');
   });
 
   it('parses an actual_spend correctly', () => {
@@ -100,7 +102,6 @@ describe('serialiseEntry', () => {
     date:           new Date(2025, 2, 15),
     amount:         94.80,
     spend_type:     'actual_spend',
-    periodicity:    'annual',
     spend_category: 'groceries',
     description:    'Supermarket run',
     valid_until:    null,

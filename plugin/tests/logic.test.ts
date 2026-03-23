@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   monthsActiveInYear, annualValue, monthlyValue,
-  monthsToDate, spendInMonth, sumByCategory, fmt, fmtCat,
+  monthsToDate, spendInMonth, fmt, fmtCat,
 } from '../src/logic';
 import type { BudgetEntry } from '../src/types';
 
@@ -11,7 +11,6 @@ function entry(overrides: Partial<BudgetEntry> & { spend_type: BudgetEntry['spen
   return {
     date:           new Date(2025, 0, 1),
     amount:         100,
-    periodicity:    'monthly',
     spend_category: 'test',
     description:    'test',
     valid_until:    null,
@@ -22,19 +21,19 @@ function entry(overrides: Partial<BudgetEntry> & { spend_type: BudgetEntry['spen
 // ── monthsActiveInYear ────────────────────────────────────────
 
 describe('monthsActiveInYear', () => {
-  it('full year monthly record → 12', () => {
-    const r = entry({ spend_type: 'planned_known', date: new Date(2025, 0, 1) });
+  it('full year monthly_fixed record → 12', () => {
+    const r = entry({ spend_type: 'monthly_fixed', date: new Date(2025, 0, 1) });
     expect(monthsActiveInYear(r, 2025)).toBe(12);
   });
 
   it('record starting mid-year → remaining months', () => {
-    const r = entry({ spend_type: 'planned_known', date: new Date(2025, 6, 1) }); // July
+    const r = entry({ spend_type: 'monthly_fixed', date: new Date(2025, 6, 1) }); // July
     expect(monthsActiveInYear(r, 2025)).toBe(6); // Jul–Dec
   });
 
   it('record expiring mid-year → active months only', () => {
     const r = entry({
-      spend_type:  'planned_known',
+      spend_type:  'monthly_fixed',
       date:        new Date(2025, 0, 1),
       valid_until: new Date(2025, 5, 30), // June
     });
@@ -42,13 +41,13 @@ describe('monthsActiveInYear', () => {
   });
 
   it('record that has not started yet → 0', () => {
-    const r = entry({ spend_type: 'planned_known', date: new Date(2026, 0, 1) });
+    const r = entry({ spend_type: 'monthly_fixed', date: new Date(2026, 0, 1) });
     expect(monthsActiveInYear(r, 2025)).toBe(0);
   });
 
   it('record expired before year starts → 0', () => {
     const r = entry({
-      spend_type:  'planned_known',
+      spend_type:  'monthly_fixed',
       date:        new Date(2024, 0, 1),
       valid_until: new Date(2024, 11, 31),
     });
@@ -59,25 +58,24 @@ describe('monthsActiveInYear', () => {
 // ── annualValue ───────────────────────────────────────────────
 
 describe('annualValue', () => {
-  it('monthly record → amount × months active', () => {
-    const r = entry({ spend_type: 'planned_known', amount: 100 });
+  it('monthly_fixed record → amount × months active', () => {
+    const r = entry({ spend_type: 'monthly_fixed', amount: 100 });
     expect(annualValue(r, 2025)).toBe(1200);
   });
 
-  it('annual record → amount as-is', () => {
-    const r = entry({ spend_type: 'planned_known', periodicity: 'annual', amount: 1200 });
+  it('annual_estimate record → amount as-is', () => {
+    const r = entry({ spend_type: 'annual_estimate', amount: 1200 });
     expect(annualValue(r, 2025)).toBe(1200);
   });
 
-  it('annual record not yet started → 0', () => {
-    const r = entry({ spend_type: 'planned_known', periodicity: 'annual', date: new Date(2026, 0, 1) });
+  it('annual_estimate record not yet started → 0', () => {
+    const r = entry({ spend_type: 'annual_estimate', date: new Date(2026, 0, 1) });
     expect(annualValue(r, 2025)).toBe(0);
   });
 
-  it('annual record expired before year → 0', () => {
+  it('annual_estimate record expired before year → 0', () => {
     const r = entry({
-      spend_type:  'planned_known',
-      periodicity: 'annual',
+      spend_type:  'annual_estimate',
       date:        new Date(2024, 0, 1),
       valid_until: new Date(2024, 11, 31),
     });
@@ -88,24 +86,24 @@ describe('annualValue', () => {
 // ── monthlyValue ──────────────────────────────────────────────
 
 describe('monthlyValue', () => {
-  it('monthly record → full amount', () => {
-    const r = entry({ spend_type: 'planned_known', amount: 850 });
+  it('monthly_fixed record → full amount', () => {
+    const r = entry({ spend_type: 'monthly_fixed', amount: 850 });
     expect(monthlyValue(r, 2025, 0)).toBe(850);
   });
 
-  it('annual record → amount / 12', () => {
-    const r = entry({ spend_type: 'planned_known', periodicity: 'annual', amount: 1200 });
+  it('annual_estimate record → amount / 12', () => {
+    const r = entry({ spend_type: 'annual_estimate', amount: 1200 });
     expect(monthlyValue(r, 2025, 0)).toBe(100);
   });
 
   it('record not yet active in month → 0', () => {
-    const r = entry({ spend_type: 'planned_known', date: new Date(2025, 6, 1) });
+    const r = entry({ spend_type: 'monthly_fixed', date: new Date(2025, 6, 1) });
     expect(monthlyValue(r, 2025, 5)).toBe(0); // June, record starts July
   });
 
   it('record expired before month → 0', () => {
     const r = entry({
-      spend_type:  'planned_known',
+      spend_type:  'monthly_fixed',
       date:        new Date(2025, 0, 1),
       valid_until: new Date(2025, 2, 31), // expires March
     });
@@ -120,19 +118,19 @@ describe('monthsToDate', () => {
 
   it('past year → 12 months', () => {
     vi.setSystemTime(new Date(2026, 3, 1)); // April 2026
-    const r = entry({ spend_type: 'planned_known' });
+    const r = entry({ spend_type: 'monthly_fixed' });
     expect(monthsToDate(r, 2025)).toBe(12);
   });
 
   it('current year → months up to now', () => {
     vi.setSystemTime(new Date(2025, 5, 15)); // June 2025
-    const r = entry({ spend_type: 'planned_known', date: new Date(2025, 0, 1) });
+    const r = entry({ spend_type: 'monthly_fixed', date: new Date(2025, 0, 1) });
     expect(monthsToDate(r, 2025)).toBe(6); // Jan–Jun
   });
 
   it('future year → 0', () => {
     vi.setSystemTime(new Date(2025, 0, 1));
-    const r = entry({ spend_type: 'planned_known' });
+    const r = entry({ spend_type: 'monthly_fixed' });
     expect(monthsToDate(r, 2026)).toBe(0);
   });
 });
@@ -144,7 +142,7 @@ describe('spendInMonth', () => {
     entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 5),  amount: 50  }),
     entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 20), amount: 30  }),
     entry({ spend_type: 'actual_spend', date: new Date(2025, 3, 1),  amount: 100 }),
-    entry({ spend_type: 'planned_known', date: new Date(2025, 2, 1), amount: 850 }),
+    entry({ spend_type: 'monthly_fixed', date: new Date(2025, 2, 1), amount: 850 }),
   ];
 
   it('returns only actual_spend in the given month', () => {
