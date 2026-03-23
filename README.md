@@ -6,15 +6,15 @@ A personal cashflow dashboard for people who want to understand where their mone
 
 ## Philosophy
 
-I built ThriftLens for my own needs, to track and understand where my money goes. The question I want ThriftLens to answer, at any point in the year, is: *what does my cost of living actually look like right now?* What's locked in, what's earmarked, what has cleared — all in one view, without manual reconciliation.
+I built ThriftLens for my own needs, to track and understand - in advance - where my money goes. The question I want ThriftLens to answer, at any point in the year, is: *what does my ongoing cost of living actually look like right now?* 
 
-The app is idiosyncratic — I aimed for simplicity and glance-view clarity over 'correct' accounting models. But perhaps you'll find it useful!
+The app is idiosyncratic - I aimed for simplicity and glance-view clarity over 'correct' accounting models. And the app is fatalistic - life is expense - so there's no 'budgeting'! But perhaps you'll find it useful.
 
-**Money is committed before it is spent.** I want to see costs in advance. Insurance premiums are due every year. Rent is owed on the first of every month whether I've paid it or not. Heating oil will be needed in October whether I've budgeted for it or not. The cost of a holiday earmarked for summer is, in effect, already gone. I want my financial picture to reflect that abstraction — not wait for the bank statement to confirm it.
+**Money is committed before it is spent.** I want to see costs in advance. Insurance premiums are due every year. Rent is owed on the first of every month whether I've paid it or not. Heating oil will be needed in October whether I've budgeted for it or not. The cost of a holiday earmarked for summer is, in effect, already gone. I want my financial picture to reflect that abstraction - not wait for the bank statement to confirm it.
 
-Some costs are only approximately known in advance — so the app earmarks a figure, drawn from what I actually spent on that category last year (you'll have to supply estimate amounts yourself for the first year). That reservation shows up in the dashboard immediately because that's the honest picture. Estimates are forward commitments of things I know I'll have to spend on.
+Some costs are only approximately known in advance - so the app earmarks a figure, drawn from what I actually spent on that category last year (you'll have to supply estimate amounts yourself for the first year). That reservation shows up in the dashboard immediately because that's the fatalistic picture. Estimates are forward commitments of things I know I'll have to spend on.
 
-Apart from estimates, I'm not budgeting or setting aside pots of money here. The app is fatalistic and just assumes life is expense. Unplanned spending simply appears as actual spend records. The dashboard shows me what it cost; I draw my own conclusions.
+Apart from estimates, I'm not budgeting or setting aside pots of money here. Unplanned spending simply appears as actual spend records - no judgement. The dashboard shows me what it cost; I draw my own conclusions.
 
 ---
 
