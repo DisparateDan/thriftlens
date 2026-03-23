@@ -1,6 +1,6 @@
 # ThriftLens
 
-A personal cashflow dashboard for people who want to understand where their money goes, and see their cost of living.
+A plugin for Obsidian: a personal cashflow dashboard for understanding where money goes, and see cost of living.
 
 ---
 
