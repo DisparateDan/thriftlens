@@ -1,11 +1,11 @@
 import { ItemView, WorkspaceLeaf, normalizePath, setIcon } from 'obsidian';
 import type ThriftLensPlugin from './main';
-import { loadYear, yearFileExists } from './loader';
+import { loadYear, yearFileExists, getAvailableYears } from './loader';
 import type { BudgetEntry } from './types';
 import { MONTH_NAMES } from './logic';
 import {
   renderNavBar, renderSummaryCards, renderCommitmentsTable,
-  renderMonth, renderAnnual,
+  renderMonth, renderAnnual, renderYoY,
 } from './renderer';
 import { AddEntryModal }     from './modals/AddEntryModal';
 import { CreateRecordModal } from './modals/CreateRecordModal';
@@ -16,7 +16,7 @@ interface ViewState {
   year:       number;
   month:      number;
   annualYear: number;
-  activeTab:  'monthly' | 'annual';
+  activeTab:  'monthly' | 'annual' | 'yoy';
 }
 
 export class ThriftLensView extends ItemView {
@@ -27,10 +27,13 @@ export class ThriftLensView extends ItemView {
   // DOM refs set in onOpen
   private monthTabBtn!:       HTMLElement;
   private annualTabBtn!:      HTMLElement;
+  private yoyTabBtn!:         HTMLElement;
   private monthNav!:          HTMLElement;
   private annualNav!:         HTMLElement;
   private monthlyOuter!:      HTMLElement;
   private annualOuter!:       HTMLElement;
+  private yoyOuter!:          HTMLElement;
+  private yoyContent!:        HTMLElement;
   private dayInfoEl!:         HTMLElement;
   private cardsContent!:      HTMLElement;
   private commitContent!:     HTMLElement;
@@ -63,8 +66,9 @@ export class ThriftLensView extends ItemView {
     // ── Toolbar ───────────────────────────────────────────────
     const toolbar  = root.createEl('div', { cls: 'tl-toolbar' });
     const tabGroup = toolbar.createEl('div', { cls: 'tl-tab-group' });
-    this.monthTabBtn  = tabGroup.createEl('button', { text: 'Monthly', cls: 'tl-tab-btn' });
-    this.annualTabBtn = tabGroup.createEl('button', { text: 'Annual',  cls: 'tl-tab-btn' });
+    this.monthTabBtn  = tabGroup.createEl('button', { text: 'Monthly',     cls: 'tl-tab-btn' });
+    this.annualTabBtn = tabGroup.createEl('button', { text: 'Annual',      cls: 'tl-tab-btn' });
+    this.yoyTabBtn    = tabGroup.createEl('button', { text: 'Year on Year', cls: 'tl-tab-btn' });
     toolbar.createEl('div', { cls: 'tl-sep' });
     this.monthNav  = toolbar.createEl('div', { cls: 'tl-nav-slot' });
     this.annualNav = toolbar.createEl('div', { cls: 'tl-nav-slot' });
@@ -119,9 +123,14 @@ export class ThriftLensView extends ItemView {
       .createEl('span', { text: 'Unplanned Spending', cls: 'tl-section-title' });
     this.annualGreenContent = annualGreenSection.createEl('div');
 
+    // ── Year on Year outer ─────────────────────────────────────
+    this.yoyOuter   = root.createEl('div', { cls: 'tl-tab-pane' });
+    this.yoyContent = this.yoyOuter.createEl('div');
+
     // ── Event wiring ───────────────────────────────────────────
     this.monthTabBtn.onclick  = () => this.showTab('monthly');
     this.annualTabBtn.onclick = () => this.showTab('annual');
+    this.yoyTabBtn.onclick    = () => this.showTab('yoy');
 
     logBtn.onclick      = () => new AddEntryModal(this.app, this.plugin).open();
     registerBtn.onclick = () => new CreateRecordModal(this.app, this.plugin).open();
@@ -150,14 +159,16 @@ export class ThriftLensView extends ItemView {
     // registerEvent cleans up listeners automatically
   }
 
-  private showTab(tab: 'monthly' | 'annual'): void {
+  private showTab(tab: 'monthly' | 'annual' | 'yoy'): void {
     this.state.activeTab = tab;
     this.monthlyOuter.style.display = tab === 'monthly' ? '' : 'none';
     this.annualOuter.style.display  = tab === 'annual'  ? '' : 'none';
+    this.yoyOuter.style.display     = tab === 'yoy'     ? '' : 'none';
     this.monthNav.style.display     = tab === 'monthly' ? 'flex' : 'none';
     this.annualNav.style.display    = tab === 'annual'  ? 'flex' : 'none';
     this.monthTabBtn.toggleClass('tl-tab-btn--active',  tab === 'monthly');
     this.annualTabBtn.toggleClass('tl-tab-btn--active', tab === 'annual');
+    this.yoyTabBtn.toggleClass('tl-tab-btn--active',    tab === 'yoy');
   }
 
   async refresh(): Promise<void> {
@@ -168,13 +179,17 @@ export class ThriftLensView extends ItemView {
       const currency = this.plugin.settings.currencySymbol;
       const folder   = this.plugin.settings.dataFolder;
 
-      // Load with simple dedup when both tabs are on the same year
+      // Load with dedup across all required years
       const cache = new Map<number, BudgetEntry[]>();
       const load  = async (y: number): Promise<BudgetEntry[]> => {
         if (!cache.has(y)) cache.set(y, await loadYear(this.app, folder, y));
         return cache.get(y)!;
       };
+
+      const availableYears = getAvailableYears(this.app, folder);
       const [monthRecords, annualRecords] = await Promise.all([load(year), load(annualYear)]);
+      await Promise.all(availableYears.map(y => load(y)));
+      const allYearsData = availableYears.map(y => ({ year: y, records: cache.get(y)! }));
 
       // Monthly nav
       this.monthNav.empty();
@@ -217,6 +232,9 @@ export class ThriftLensView extends ItemView {
         this.annualBlueContent, this.annualPurpleContent, this.annualGreenContent,
         annualRecords, annualYear, currency,
       );
+
+      this.yoyContent.empty();
+      renderYoY(this.yoyContent, allYearsData, new Date().getFullYear(), currency);
 
       this.showTab(this.state.activeTab);
     } finally {

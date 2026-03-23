@@ -492,6 +492,28 @@
   text-align: left;
 }
 
+/* ─── Year on Year view ─────────────────────────────────────────── */
+
+.tl-dashboard .tl-section--yoy-current {
+  border-left-color: rgba(220, 160, 60, 0.85);
+  background: var(--background-secondary);
+}
+
+.tl-dashboard .tl-yoy-year-title {
+  font-size: 0.95em;
+  letter-spacing: 0.02em;
+}
+
+.tl-dashboard .tl-yoy-current-badge {
+  font-size: 0.68em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(220, 160, 60, 0.9);
+  margin-left: 0.75em;
+  vertical-align: middle;
+}
+
 /* ─── Import CSV modal ─────────────────────────────────────────── */
 
 .tl-currency-prefix {

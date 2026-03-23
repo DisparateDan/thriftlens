@@ -181,18 +181,12 @@ function renderDetailTable(
   }
 }
 
-export function renderAnnual(
-  blueContainer: HTMLElement,
-  purpleContainer: HTMLElement,
-  greenContainer: HTMLElement,
+function renderAnnualSummaryTable(
+  parent: HTMLElement,
   records: BudgetEntry[],
   year: number,
   currency: string,
 ): void {
-  blueContainer.empty();
-  purpleContainer.empty();
-  greenContainer.empty();
-
   const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
   const spend     = records.filter(r => r.spend_type === 'actual_spend');
 
@@ -209,25 +203,69 @@ export function renderAnnual(
     },
   ];
 
-  // Summary table
-  const table = blueContainer.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
+  const table = parent.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   rows.forEach(({ label, total, spent }) => {
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: label });
-    tr.createEl('td', { text: fmt(total, currency),           attr: { 'data-label': 'Total' } });
-    tr.createEl('td', { text: fmt(spent, currency),           attr: { 'data-label': 'Spent' } });
-    tr.createEl('td', { text: fmt(total - spent, currency),   attr: { 'data-label': 'Remaining' } });
+    tr.createEl('td', { text: fmt(total, currency),         attr: { 'data-label': 'Total' } });
+    tr.createEl('td', { text: fmt(spent, currency),         attr: { 'data-label': 'Spent' } });
+    tr.createEl('td', { text: fmt(total - spent, currency), attr: { 'data-label': 'Remaining' } });
   });
   const tTotal = rows.reduce((s, r) => s + r.total, 0);
   const tSpent = rows.reduce((s, r) => s + r.spent, 0);
   const tfr    = table.createEl('tfoot').createEl('tr');
   ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)]
     .forEach(val => tfr.createEl('td', { text: val }));
+}
+
+export function renderYoY(
+  parent: HTMLElement,
+  allYears: { year: number; records: BudgetEntry[] }[],
+  currentYear: number,
+  currency: string,
+): void {
+  if (allYears.length === 0) {
+    parent.createEl('p', { text: 'No registers found.', cls: 'tl-empty' });
+    return;
+  }
+  [...allYears]
+    .sort((a, b) => b.year - a.year)
+    .forEach(({ year, records }) => {
+      const isCurrent = year === currentYear;
+      const section   = parent.createEl('div', {
+        cls: 'tl-section tl-section--blue' + (isCurrent ? ' tl-section--yoy-current' : ''),
+      });
+      const header = section.createEl('div', { cls: 'tl-section-header' });
+      header.createEl('span', { text: String(year), cls: 'tl-section-title tl-yoy-year-title' });
+      if (isCurrent) {
+        header.createEl('span', { text: 'Current', cls: 'tl-yoy-current-badge' });
+      }
+      renderAnnualSummaryTable(section, records, year, currency);
+    });
+}
+
+export function renderAnnual(
+  blueContainer: HTMLElement,
+  purpleContainer: HTMLElement,
+  greenContainer: HTMLElement,
+  records: BudgetEntry[],
+  year: number,
+  currency: string,
+): void {
+  blueContainer.empty();
+  purpleContainer.empty();
+  greenContainer.empty();
+
+  // Summary table
+  renderAnnualSummaryTable(blueContainer, records, year, currency);
 
   // Detail breakdown
+  const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
+  const spend     = records.filter(r => r.spend_type === 'actual_spend');
+
   const spendByCat: Record<string, number> = {};
   spend.forEach(r => {
     spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount;
