@@ -32,9 +32,15 @@ Every entry in ThriftLens is one of three things:
 
 **Monthly view** shows the current month: what is committed this month (annual estimates amortised to a monthly figure, and fixed costs for the month), and what has actually been spent. It gives you a running picture of the month — how much is locked in, how much is paid.
 
+![Monthly view](docs/thriftlens_month.png)
+
 **Annual view** shows the full year: the total committed baseline versus total actual spend, broken down by category. Annual estimates are matched against actuals by `spend_category`. Monthly fixed spend-to-date is computed as amount × months elapsed — no transaction matching needed. This is where you see whether your estimates are holding and how the year is tracking overall.
 
+![Annual view](docs/thriftlens_annual.png)
+
 **Year on Year view** shows the annual summary table for every register in descending order, so you can compare your cost of living across years at a glance. The current year is highlighted.
+
+![Year on Year view](docs/thriftlens_yoy.png)
 
 ### Spend categories
 
