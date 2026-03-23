@@ -1,7 +1,7 @@
 import type { BudgetEntry } from './types';
 import {
   monthlyValue, annualValue, monthsToDate,
-  spendInMonth, sumByCategory,
+  spendInMonth,
   fmt, fmtCat, MONTH_NAMES,
 } from './logic';
 
@@ -157,28 +157,28 @@ function renderMonthlySection(
   month: number,
   currency: string,
 ): string {
-  const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const monthSpend = spendInMonth(records, year, month);
+  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
+  const monthSpend    = spendInMonth(records, year, month);
 
-  const committedByCat    = sumByCategory(committed,  r => monthlyValue(r, year, month));
-  const spentByCat        = sumByCategory(monthSpend, r => r.amount);
-  const annualInstallment = committedByCat.annual  || 0;
-  const fixedCosts        = committedByCat.monthly || 0;
-  const totalSpent        = Object.values(spentByCat).reduce((a, b) => a + b, 0);
+  const annualInstallment = annualBudgets.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
   const summary = summaryTable([
-    { label: 'Annual Costs Installment', value: fmt(annualInstallment, currency) },
-    { label: 'Fixed Costs',              value: fmt(fixedCosts, currency) },
-    { label: 'Spend This Month',         value: fmt(totalSpent, currency) },
-    { label: 'Total',                    value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
+    { label: 'Annual Installment', value: fmt(annualInstallment, currency) },
+    { label: 'Fixed Costs',        value: fmt(fixedCosts, currency) },
+    { label: 'Spend This Month',   value: fmt(totalSpent, currency) },
+    { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
 
   // Fixed costs detail
   const fixedRows: string[][] = [];
   let fixedTotal = 0;
-  committed
-    .filter(r => r.periodicity === 'monthly')
-    .forEach(r => { fixedTotal += r.amount; fixedRows.push([r.description, fmt(r.amount, currency)]); });
+  monthlyFixeds.forEach(r => {
+    fixedTotal += r.amount;
+    fixedRows.push([r.description, fmt(r.amount, currency)]);
+  });
   const fixedTable = dataTable(['Description', 'Per Month'], fixedRows, ['Total', fmt(fixedTotal, currency)]);
 
   // Transactions
@@ -208,25 +208,26 @@ function renderMonthlySection(
 // ── Annual section ────────────────────────────────────────────────
 
 function renderAnnualSection(records: BudgetEntry[], year: number, currency: string): string {
-  const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const spend     = records.filter(r => r.spend_type === 'actual_spend');
+  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
+  const actuals       = records.filter(r => r.spend_type === 'actual_spend');
 
   const spendByCat: Record<string, number> = {};
-  spend.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
+  actuals.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
 
-  const annualCommitted = committed.filter(r => r.periodicity === 'annual');
-  const monthlyCommitted = committed.filter(r => r.periodicity === 'monthly');
+  const annualBudgetCats = new Set(annualBudgets.map(r => r.spend_category));
+  const monthlyFixedCats = new Set(monthlyFixeds.map(r => r.spend_category));
 
   const rows = [
     {
-      label: 'Annual Costs',
-      total: annualCommitted.reduce((s, r) => s + annualValue(r, year), 0),
-      spent: spend.filter(r => r.periodicity === 'annual').reduce((s, r) => s + r.amount, 0),
+      label: 'Annual Budgets',
+      total: annualBudgets.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => annualBudgetCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
-      label: 'Monthly Fixed Costs',
-      total: monthlyCommitted.reduce((s, r) => s + annualValue(r, year), 0),
-      spent: spend.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + r.amount, 0),
+      label: 'Monthly Fixed',
+      total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => monthlyFixedCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
   ];
 
@@ -236,24 +237,24 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
   const summaryRows = rows.map(r => [
     r.label, fmt(r.total, currency), fmt(r.spent, currency), fmt(r.total - r.spent, currency),
   ]);
-  const summaryTable = dataTable(
-    ['Frequency', 'Total', 'Spend To Date', 'Remaining'],
+  const annualSummaryTable = dataTable(
+    ['Category', 'Total', 'Spend To Date', 'Remaining'],
     summaryRows,
     ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)],
   );
 
-  // Annual detail
-  const annualDetailRows = annualCommitted.map(r => {
+  // Annual budget detail
+  const annualDetailRows = annualBudgets.map(r => {
     const total = annualValue(r, year);
     const spent = spendByCat[r.spend_category] || 0;
     return [fmtCat(r.spend_category), fmt(total, currency), spent ? fmt(spent, currency) : '—', fmt(total - spent, currency)];
   });
 
   // Monthly fixed detail
-  const monthlyDetailRows = monthlyCommitted.map(r => {
+  const monthlyDetailRows = monthlyFixeds.map(r => {
     const total = annualValue(r, year);
-    const spent = monthsToDate(r, year) * r.amount;
-    return [fmtCat(r.spend_category), fmt(total, currency), fmt(spent, currency), fmt(total - spent, currency)];
+    const spent = spendByCat[r.spend_category] || 0;
+    return [fmtCat(r.spend_category), fmt(total, currency), spent ? fmt(spent, currency) : '—', fmt(total - spent, currency)];
   });
 
   const detailHeaders = ['Category', 'Total', 'Spend To Date', 'Remaining'];
@@ -261,12 +262,12 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
   return `
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
-      ${summaryTable}
-      <p class="subsection-label">Annual Costs Detail</p>
+      ${annualSummaryTable}
+      <p class="subsection-label">Annual Budgets Detail</p>
       ${dataTable(detailHeaders, annualDetailRows)}
     </div>
     <div class="section section--purple">
-      <p class="section-title">Monthly Fixed Costs Detail</p>
+      <p class="section-title">Monthly Fixed Detail</p>
       ${dataTable(detailHeaders, monthlyDetailRows)}
     </div>`;
 }

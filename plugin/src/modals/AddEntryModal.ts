@@ -6,21 +6,22 @@ import { getAvailableYears, loadYear } from '../loader';
 
 function todayStr(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
 }
 
-function parseDateStr(s: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s.trim())) return null;
-  const [y, m, d] = s.trim().split('-').map(Number);
+function parseDateInput(s: string): Date | null {
+  const trimmed = s.trim();
+  if (!/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) return null;
+  const [d, m, y] = trimmed.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
   return isNaN(dt.getTime()) ? null : dt;
 }
 
 interface FormState {
   dateStr:        string;
+  yearStr:        string;
   amount:         string;
   spend_type:     BudgetEntry['spend_type'];
-  periodicity:    BudgetEntry['periodicity'];
   spend_category: string;
   description:    string;
   validUntilStr:  string;
@@ -30,9 +31,9 @@ export class AddEntryModal extends Modal {
   private plugin: ThriftLensPlugin;
   private form: FormState = {
     dateStr:        todayStr(),
+    yearStr:        String(new Date().getFullYear()),
     amount:         '',
     spend_type:     'actual_spend',
-    periodicity:    'annual',
     spend_category: '',
     description:    '',
     validUntilStr:  '',
@@ -57,12 +58,21 @@ export class AddEntryModal extends Modal {
 
     const categories = await this.loadCategories();
 
-    new Setting(contentEl)
+    // Date (actual_spend only)
+    const dateSetting = new Setting(contentEl)
       .setName('Date')
       .addText(t => t
-        .setPlaceholder('YYYY-MM-DD')
+        .setPlaceholder('DD-MM-YYYY')
         .setValue(this.form.dateStr)
         .onChange(v => { this.form.dateStr = v; }));
+
+    // Year (monthly_fixed / annual_budget only)
+    const yearSetting = new Setting(contentEl)
+      .setName('Year')
+      .addText(t => t
+        .setPlaceholder('YYYY')
+        .setValue(this.form.yearStr)
+        .onChange(v => { this.form.yearStr = v.trim(); }));
 
     const amountSetting = new Setting(contentEl).setName('Amount');
     amountSetting.controlEl.createEl('span', {
@@ -73,7 +83,7 @@ export class AddEntryModal extends Modal {
       .setPlaceholder('0.00')
       .onChange(v => { this.form.amount = v; }));
 
-    // Spend category with datalist for existing slugs
+    // Spend category with datalist
     const catSetting = new Setting(contentEl)
       .setName('Spend category')
       .setDesc('Lowercase slug, e.g. groceries or heating_oil');
@@ -81,9 +91,9 @@ export class AddEntryModal extends Modal {
       t.setPlaceholder('e.g. groceries')
         .onChange(v => { this.form.spend_category = v.trim().toLowerCase(); });
       if (categories.length > 0) {
-        const listId  = 'tl-category-datalist';
+        const listId   = 'tl-category-datalist';
         const datalist = contentEl.createEl('datalist');
-        datalist.id   = listId;
+        datalist.id    = listId;
         categories.forEach(c => datalist.createEl('option', { value: c }));
         t.inputEl.setAttribute('list', listId);
       }
@@ -95,44 +105,34 @@ export class AddEntryModal extends Modal {
         .setPlaceholder('Brief description')
         .onChange(v => { this.form.description = v; }));
 
-    let periodicityRow: Setting;
-    let validUntilRow: Setting;
-
-    const updatePlannedFields = (spendType: BudgetEntry['spend_type']) => {
-      const planned = spendType !== 'actual_spend';
-      periodicityRow.settingEl.style.display = planned ? '' : 'none';
-      validUntilRow.settingEl.style.display  = planned ? '' : 'none';
-    };
-
     new Setting(contentEl)
       .setName('Spend type')
       .addDropdown(d => d
-        .addOption('actual_spend',     'Actual spend')
-        .addOption('planned_known',    'Planned known')
-        .addOption('planned_estimate', 'Planned estimate')
+        .addOption('actual_spend',  'Actual spend')
+        .addOption('monthly_fixed', 'Monthly fixed')
+        .addOption('annual_budget', 'Annual budget')
         .setValue(this.form.spend_type)
         .onChange(v => {
           this.form.spend_type = v as BudgetEntry['spend_type'];
-          updatePlannedFields(this.form.spend_type);
+          updateVisibility(this.form.spend_type);
         }));
 
-    periodicityRow = new Setting(contentEl)
-      .setName('Periodicity')
-      .addDropdown(d => d
-        .addOption('annual',  'Annual')
-        .addOption('monthly', 'Monthly')
-        .setValue(this.form.periodicity)
-        .onChange(v => { this.form.periodicity = v as BudgetEntry['periodicity']; }));
-
-    validUntilRow = new Setting(contentEl)
+    const validUntilRow = new Setting(contentEl)
       .setName('Valid until')
-      .setDesc('Optional. Only for mid-year expiry. Format: YYYY-MM-DD')
+      .setDesc('Optional. Only for mid-year expiry of a monthly fixed cost.')
       .addText(t => t
-        .setPlaceholder('YYYY-MM-DD')
+        .setPlaceholder('DD-MM-YYYY')
         .onChange(v => { this.form.validUntilStr = v.trim(); }));
 
-    // Set initial visibility (default spend_type is actual_spend → hide planned fields)
-    updatePlannedFields(this.form.spend_type);
+    const updateVisibility = (spendType: BudgetEntry['spend_type']) => {
+      const isActual        = spendType === 'actual_spend';
+      const isMonthlyFixed  = spendType === 'monthly_fixed';
+      dateSetting.settingEl.style.display     = isActual       ? '' : 'none';
+      yearSetting.settingEl.style.display     = isActual       ? 'none' : '';
+      validUntilRow.settingEl.style.display   = isMonthlyFixed ? '' : 'none';
+    };
+
+    updateVisibility(this.form.spend_type);
 
     new Setting(contentEl)
       .addButton(b => b
@@ -155,10 +155,19 @@ export class AddEntryModal extends Modal {
   }
 
   private async submit(): Promise<void> {
-    const { dateStr, amount, spend_type, periodicity, spend_category, description, validUntilStr } = this.form;
+    const { dateStr, yearStr, amount, spend_type, spend_category, description, validUntilStr } = this.form;
 
-    const date = parseDateStr(dateStr);
-    if (!date)               { new Notice('Invalid date — use YYYY-MM-DD'); return; }
+    let date: Date;
+    if (spend_type === 'actual_spend') {
+      const parsed = parseDateInput(dateStr);
+      if (!parsed) { new Notice('Invalid date — use DD-MM-YYYY'); return; }
+      date = parsed;
+    } else {
+      const y = parseInt(yearStr, 10);
+      if (isNaN(y) || y < 2000 || y > 2100) { new Notice('Invalid year'); return; }
+      date = new Date(y, 0, 1);
+    }
+
     const amountNum = parseFloat(amount);
     if (!amountNum)          { new Notice('Amount is required'); return; }
     if (!spend_category)     { new Notice('Spend category is required'); return; }
@@ -166,12 +175,12 @@ export class AddEntryModal extends Modal {
 
     let valid_until: Date | null = null;
     if (validUntilStr) {
-      valid_until = parseDateStr(validUntilStr);
-      if (!valid_until) { new Notice('Invalid valid_until date'); return; }
+      valid_until = parseDateInput(validUntilStr);
+      if (!valid_until) { new Notice('Invalid valid until date — use DD-MM-YYYY'); return; }
     }
 
     const entry: BudgetEntry = {
-      date, amount: amountNum, spend_type, periodicity,
+      date, amount: amountNum, spend_type,
       spend_category, description, valid_until,
     };
 

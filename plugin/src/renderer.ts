@@ -1,7 +1,7 @@
 import type { BudgetEntry } from './types';
 import {
   monthlyValue, annualValue, monthsToDate,
-  spendInMonth, sumByCategory,
+  spendInMonth,
   fmt, fmtCat,
 } from './logic';
 
@@ -39,7 +39,7 @@ export function renderSummaryCards(
 export function renderCommitmentsTable(
   parent: HTMLElement,
   records: BudgetEntry[],
-  year: number,
+  _year: number,
   currency: string,
 ): void {
   const table = parent.createEl('table', { cls: 'tl-table' });
@@ -49,7 +49,7 @@ export function renderCommitmentsTable(
   let tMonthly = 0;
 
   records
-    .filter(r => (r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate') && r.periodicity === 'monthly')
+    .filter(r => r.spend_type === 'monthly_fixed')
     .sort((a, b) => a.description.localeCompare(b.description))
     .forEach(r => {
       tMonthly += r.amount;
@@ -106,21 +106,19 @@ export function renderMonth(
     dayInfoEl.style.display = 'none';
   }
 
-  const committed  = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const monthSpend = spendInMonth(records, year, month);
+  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
+  const monthSpend    = spendInMonth(records, year, month);
 
-  const committedByCat = sumByCategory(committed,  r => monthlyValue(r, year, month));
-  const spentByCat     = sumByCategory(monthSpend, r => r.amount);
-
-  const annualInstallment = committedByCat.annual  || 0;
-  const fixedCosts        = committedByCat.monthly || 0;
-  const totalSpent        = Object.values(spentByCat).reduce((a, b) => a + b, 0);
+  const annualInstallment = annualBudgets.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const fixedCosts        = monthlyFixeds.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+  const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
   renderSummaryCards(cardsContainer, [
-    { label: 'Annual Installment',       value: fmt(annualInstallment, currency) },
-    { label: 'Fixed Costs',              value: fmt(fixedCosts, currency)         },
-    { label: 'Spend This Month',         value: fmt(totalSpent, currency)         },
-    { label: 'Total',                    value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
+    { label: 'Annual Installment', value: fmt(annualInstallment, currency) },
+    { label: 'Fixed Costs',        value: fmt(fixedCosts, currency)         },
+    { label: 'Spend This Month',   value: fmt(totalSpent, currency)         },
+    { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
 
   renderMonthSpendList(spendContainer, monthSpend, currency);
@@ -134,7 +132,6 @@ function renderDetailTable(
   currency: string,
   spentFn: (entries: BudgetEntry[]) => number,
 ): void {
-  // Group by spend_category so multiple entries sharing a slug collapse to one row.
   const byCategory = new Map<string, BudgetEntry[]>();
   for (const r of records) {
     if (!byCategory.has(r.spend_category)) byCategory.set(r.spend_category, []);
@@ -148,9 +145,9 @@ function renderDetailTable(
   const tbody = table.createEl('tbody');
 
   for (const [cat, entries] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
-    const total        = entries.reduce((s, r) => s + annualValue(r, year), 0);
-    const spent        = spentFn(entries);
-    const expandable   = entries.length > 1;
+    const total      = entries.reduce((s, r) => s + annualValue(r, year), 0);
+    const spent      = spentFn(entries);
+    const expandable = entries.length > 1;
 
     const tr = tbody.createEl('tr', { cls: expandable ? 'tl-detail-row tl-detail-row--expandable' : 'tl-detail-row' });
     const catCell = tr.createEl('td');
@@ -187,25 +184,29 @@ function renderAnnualSummaryTable(
   year: number,
   currency: string,
 ): void {
-  const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const spend     = records.filter(r => r.spend_type === 'actual_spend');
+  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
+  const actuals       = records.filter(r => r.spend_type === 'actual_spend');
+
+  const annualBudgetCats = new Set(annualBudgets.map(r => r.spend_category));
+  const monthlyFixedCats = new Set(monthlyFixeds.map(r => r.spend_category));
 
   const rows = [
     {
-      label: 'Annual Costs',
-      total: committed.filter(r => r.periodicity === 'annual').reduce((s, r) => s + annualValue(r, year), 0),
-      spent: spend.filter(r => r.periodicity === 'annual').reduce((s, r) => s + r.amount, 0),
+      label: 'Annual Budgets',
+      total: annualBudgets.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => annualBudgetCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
-      label: 'Monthly Fixed Costs',
-      total: committed.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + annualValue(r, year), 0),
-      spent: committed.filter(r => r.periodicity === 'monthly').reduce((s, r) => s + monthsToDate(r, year) * r.amount, 0),
+      label: 'Monthly Fixed',
+      total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
+      spent: actuals.filter(r => monthlyFixedCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
   ];
 
   const table = parent.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Frequency', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   rows.forEach(({ label, total, spent }) => {
     const tr = tbody.createEl('tr');
@@ -259,36 +260,39 @@ export function renderAnnual(
   purpleContainer.empty();
   greenContainer.empty();
 
+  const annualBudgets = records.filter(r => r.spend_type === 'annual_budget');
+  const monthlyFixeds = records.filter(r => r.spend_type === 'monthly_fixed');
+  const actuals       = records.filter(r => r.spend_type === 'actual_spend');
+
   // Summary table
   renderAnnualSummaryTable(blueContainer, records, year, currency);
 
-  // Detail breakdown
-  const committed = records.filter(r => r.spend_type === 'planned_known' || r.spend_type === 'planned_estimate');
-  const spend     = records.filter(r => r.spend_type === 'actual_spend');
-
+  // Spend lookup by category
   const spendByCat: Record<string, number> = {};
-  spend.forEach(r => {
-    spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount;
-  });
+  actuals.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
 
+  // Detail breakdowns
   renderDetailTable(
-    blueContainer, 'Annual Costs Detail',
-    committed.filter(r => r.periodicity === 'annual'),
+    blueContainer, 'Annual Budgets Detail',
+    annualBudgets,
     year, currency,
     entries => spendByCat[entries[0].spend_category] || 0,
   );
   renderDetailTable(
-    purpleContainer, 'Monthly Fixed Costs Detail',
-    committed.filter(r => r.periodicity === 'monthly'),
+    purpleContainer, 'Monthly Fixed Detail',
+    monthlyFixeds,
     year, currency,
-    entries => entries.reduce((s, r) => s + monthsToDate(r, year) * r.amount, 0),
+    entries => spendByCat[entries[0].spend_category] || 0,
   );
 
-  // Unplanned: actual_spend categories with no committed counterpart
-  const committedCats = new Set(committed.map(r => r.spend_category));
+  // Unplanned: actuals with no plan counterpart
+  const allPlanCats = new Set([
+    ...annualBudgets.map(r => r.spend_category),
+    ...monthlyFixeds.map(r => r.spend_category),
+  ]);
   const unplannedByCat = new Map<string, { total: number; count: number }>();
-  for (const r of spend) {
-    if (!committedCats.has(r.spend_category)) {
+  for (const r of actuals) {
+    if (!allPlanCats.has(r.spend_category)) {
       const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
       entry.total += r.amount;
       entry.count += 1;

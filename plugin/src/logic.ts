@@ -5,9 +5,7 @@ export const MONTH_NAMES = [
   'July',    'August',   'September', 'October', 'November', 'December',
 ];
 
-export const CAT_ORDER = ['monthly', 'annual'] as const;
-
-// Number of months a record is active within a given year.
+// Number of months a monthly_fixed record is active within a given year.
 export function monthsActiveInYear(record: BudgetEntry, year: number): number {
   const yearStart = new Date(year, 0, 1);
   const yearEnd   = new Date(year, 11, 31);
@@ -20,13 +18,14 @@ export function monthsActiveInYear(record: BudgetEntry, year: number): number {
 
 // Annualised value of a planned record.
 export function annualValue(record: BudgetEntry, year: number): number {
-  if (record.periodicity === 'annual') {
+  if (record.spend_type === 'annual_budget') {
     const yearStart = new Date(year, 0, 1);
     const yearEnd   = new Date(year, 11, 31);
     if (record.date > yearEnd) return 0;
     if (record.valid_until && record.valid_until < yearStart) return 0;
     return record.amount;
   }
+  // monthly_fixed
   return record.amount * monthsActiveInYear(record, year);
 }
 
@@ -36,10 +35,10 @@ export function monthlyValue(record: BudgetEntry, year: number, month: number): 
   const monthEnd   = new Date(year, month + 1, 0);
   if (record.date > monthEnd) return 0;
   if (record.valid_until && record.valid_until < monthStart) return 0;
-  return record.periodicity === 'annual' ? record.amount / 12 : record.amount;
+  return record.spend_type === 'annual_budget' ? record.amount / 12 : record.amount;
 }
 
-// Months a record has been active up to and including the current month.
+// Months a monthly_fixed record has been active up to and including the current month.
 export function monthsToDate(record: BudgetEntry, year: number): number {
   const now      = new Date();
   const nowYear  = now.getFullYear();
@@ -62,16 +61,6 @@ export function spendInMonth(records: BudgetEntry[], year: number, month: number
     r.date.getFullYear() === year &&
     r.date.getMonth() === month
   );
-}
-
-// Sum records by CAT_ORDER periodicity keys.
-export function sumByCategory(
-  records: BudgetEntry[],
-  valueFn: (r: BudgetEntry) => number,
-): Record<string, number> {
-  const out: Record<string, number> = Object.fromEntries(CAT_ORDER.map(c => [c, 0]));
-  records.forEach(r => { if (r.periodicity in out) out[r.periodicity] += valueFn(r); });
-  return out;
 }
 
 export function fmt(n: number, currencySymbol: string): string {

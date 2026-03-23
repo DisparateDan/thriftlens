@@ -17,20 +17,19 @@ function parseCsv(content: string): ParseResult {
   const lines = content.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) return { entries: [], parseErrors: ['File appears to be empty or has no data rows'] };
 
-  const headers     = splitCsvRow(lines[0]).map(h => h.toLowerCase().trim());
-  const col         = (name: string) => headers.indexOf(name);
-  const dateIdx     = col('date');
-  const amountIdx   = col('amount');
-  const typeIdx     = col('spend_type');
-  const periodIdx   = col('periodicity');
-  const catIdx      = col('spend_category');
-  const descIdx     = col('description');
-  const untilIdx    = col('valid_until');
+  const headers  = splitCsvRow(lines[0]).map(h => h.toLowerCase().trim());
+  const col      = (name: string) => headers.indexOf(name);
+  const dateIdx  = col('date');
+  const amountIdx = col('amount');
+  const typeIdx  = col('spend_type');
+  const catIdx   = col('spend_category');
+  const descIdx  = col('description');
+  const untilIdx = col('valid_until');
 
-  if ([dateIdx, amountIdx, typeIdx, periodIdx, catIdx, descIdx].some(i => i === -1)) {
+  if ([dateIdx, amountIdx, typeIdx, catIdx, descIdx].some(i => i === -1)) {
     return {
       entries: [],
-      parseErrors: ['Missing required column(s). Expected: date, amount, spend_type, periodicity, spend_category, description'],
+      parseErrors: ['Missing required column(s). Expected: date, amount, spend_type, spend_category, description'],
     };
   }
 
@@ -42,26 +41,22 @@ function parseCsv(content: string): ParseResult {
     const rowNum  = i + 1;
     const get     = (idx: number) => (row[idx] ?? '').trim();
 
-    const date    = parseDate(get(dateIdx));
-    const amount  = parseFloat(get(amountIdx));
-    const type    = get(typeIdx)   as BudgetEntry['spend_type'];
-    const period  = get(periodIdx) as BudgetEntry['periodicity'];
-    const cat     = get(catIdx);
-    const desc    = get(descIdx);
+    const date   = parseDate(get(dateIdx));
+    const amount = parseFloat(get(amountIdx));
+    const type   = get(typeIdx) as BudgetEntry['spend_type'];
+    const cat    = get(catIdx);
+    const desc   = get(descIdx);
     const untilRaw = untilIdx >= 0 ? get(untilIdx) : '';
 
-    if (!date)   { parseErrors.push(`Row ${rowNum}: invalid date "${get(dateIdx)}"`); continue; }
+    if (!date)         { parseErrors.push(`Row ${rowNum}: invalid date "${get(dateIdx)}"`); continue; }
     if (isNaN(amount)) { parseErrors.push(`Row ${rowNum}: invalid amount "${get(amountIdx)}"`); continue; }
-    if (!['planned_known', 'planned_estimate', 'actual_spend'].includes(type)) {
+    if (!['monthly_fixed', 'annual_budget', 'actual_spend'].includes(type)) {
       parseErrors.push(`Row ${rowNum}: invalid spend_type "${type}"`); continue;
-    }
-    if (!['monthly', 'annual'].includes(period)) {
-      parseErrors.push(`Row ${rowNum}: invalid periodicity "${period}"`); continue;
     }
     if (!cat) { parseErrors.push(`Row ${rowNum}: missing spend_category`); continue; }
 
     const valid_until = untilRaw ? parseDate(untilRaw) : null;
-    entries.push({ date, amount, spend_type: type, periodicity: period, spend_category: cat, description: desc, valid_until });
+    entries.push({ date, amount, spend_type: type, spend_category: cat, description: desc, valid_until });
   }
 
   return { entries, parseErrors };
@@ -70,13 +65,13 @@ function parseCsv(content: string): ParseResult {
 // ── Section-aware insertion ───────────────────────────────────────
 
 const SECTION_MARKERS: Record<BudgetEntry['spend_type'], string> = {
-  planned_estimate: '# ── Planned estimate',
-  planned_known:    '# ── Planned known',
-  actual_spend:     '# ── Actual spend',
+  annual_budget: '# ── Annual budget',
+  monthly_fixed: '# ── Monthly fixed',
+  actual_spend:  '# ── Actual spend',
 };
 
 // Process bottom-to-top so earlier insertion positions stay valid.
-const INSERTION_ORDER: BudgetEntry['spend_type'][] = ['actual_spend', 'planned_known', 'planned_estimate'];
+const INSERTION_ORDER: BudgetEntry['spend_type'][] = ['actual_spend', 'monthly_fixed', 'annual_budget'];
 
 function insertBySection(content: string, entries: BudgetEntry[]): string {
   const groups = new Map<BudgetEntry['spend_type'], BudgetEntry[]>(
@@ -150,7 +145,7 @@ export class ImportCsvModal extends Modal {
 
     contentEl.createEl('p', {
       text: 'Place your CSV in the vault and enter its path below. '
-          + 'Required columns: date, amount, spend_type, periodicity, spend_category, description. '
+          + 'Required columns: date, amount, spend_type, spend_category, description. '
           + 'Optional: valid_until.',
       cls: 'tl-import-intro',
     });
@@ -225,18 +220,18 @@ export class ImportCsvModal extends Modal {
       // Build conflict key set from existing planned entries
       const existing = await loadYear(this.app, folder, year);
       const plannedKey = (e: BudgetEntry) =>
-        `${e.spend_category}|${e.periodicity}|${e.description.toLowerCase().trim()}`;
+        `${e.spend_category}|${e.description.toLowerCase().trim()}`;
 
       const plannedKeys = new Set(
         existing
-          .filter(e => e.spend_type !== 'actual_spend')
+          .filter(e => e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_budget')
           .map(plannedKey),
       );
 
       // Partition: append vs skip
       const toAppend: BudgetEntry[] = [];
       for (const e of yearEntries) {
-        if (e.spend_type !== 'actual_spend') {
+        if (e.spend_type === 'monthly_fixed' || e.spend_type === 'annual_budget') {
           const key = plannedKey(e);
           if (plannedKeys.has(key)) {
             result.skipped.push({ year, spend_category: e.spend_category, periodicity: e.periodicity });
@@ -253,8 +248,8 @@ export class ImportCsvModal extends Modal {
         const scaffold = [
           '---', 'tl_type: register', `year: ${year}`, '---', '',
           '```yaml',
-          '# ── Planned estimate ──────────────────────────────', '',
-          '# ── Planned known ─────────────────────────────────', '',
+          '# ── Annual budget ──────────────────────────────────', '',
+          '# ── Monthly fixed ─────────────────────────────────', '',
           '# ── Actual spend ──────────────────────────────────',
           '```', '',
         ].join('\n');

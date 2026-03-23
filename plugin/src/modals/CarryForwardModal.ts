@@ -153,8 +153,7 @@ export class CarryForwardModal extends Modal {
     this.proposed.push({
       date: new Date(this.targetYear, 0, 1),
       amount: 0,
-      spend_type:     'planned_known',
-      periodicity:    'monthly',
+      spend_type:     'monthly_fixed',
       description:    '',
       spend_category: '',
       valid_until:    null,
@@ -176,20 +175,19 @@ export class CarryForwardModal extends Modal {
 
     // Group by spend_type for canonical section ordering
     const sections: Record<string, BudgetEntry[]> = {
-      planned_estimate: [],
-      planned_known:    [],
-      actual_spend:     [],
+      annual_budget: [],
+      monthly_fixed: [],
     };
     for (const e of this.proposed) {
-      sections[e.spend_type].push(e);
+      if (e.spend_type in sections) sections[e.spend_type].push(e);
     }
 
     const yamlLines: string[] = [
-      '# ── Planned estimate ──────────────────────────────',
-      ...sections['planned_estimate'].map(e => serialiseEntry(e)),
+      '# ── Annual budget ──────────────────────────────────',
+      ...sections['annual_budget'].map(e => serialiseEntry(e)),
       '',
-      '# ── Planned known ─────────────────────────────────',
-      ...sections['planned_known'].map(e => serialiseEntry(e)),
+      '# ── Monthly fixed ─────────────────────────────────',
+      ...sections['monthly_fixed'].map(e => serialiseEntry(e)),
       '',
       '# ── Actual spend ──────────────────────────────────',
     ];

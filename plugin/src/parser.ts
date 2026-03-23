@@ -27,7 +27,6 @@ export function parseRecordsBlock(text: string): BudgetEntry[] {
       date:           parseDate(r.date)!,
       amount:         parseFloat(r.amount) || 0,
       spend_type:     r.spend_type  as BudgetEntry['spend_type'],
-      periodicity:    r.periodicity as BudgetEntry['periodicity'],
       description:    r.description    || '',
       spend_category: r.spend_category || '',
       valid_until:    parseDate(r.valid_until) ?? null,
@@ -47,13 +46,12 @@ export function fmtAmount(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(2);
 }
 
-// Canonical field order matches existing vault files.
+// Canonical field order. date is always written; for non-actuals it will be YYYY-01-01.
 export function serialiseEntry(entry: BudgetEntry): string {
   const lines = [
     `- date: ${fmtDate(entry.date)}`,
     `  amount: ${fmtAmount(entry.amount)}`,
     `  spend_type: ${entry.spend_type}`,
-    `  periodicity: ${entry.periodicity}`,
     `  spend_category: ${entry.spend_category}`,
     `  description: ${entry.description}`,
   ];
