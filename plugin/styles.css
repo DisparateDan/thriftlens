@@ -275,6 +275,15 @@
   text-align: center;
   color: var(--text-normal);
 }
+.tl-dashboard .tl-nav-label--link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s;
+}
+.tl-dashboard .tl-nav-label--link:hover {
+  text-decoration-color: var(--text-muted);
+}
 
 .tl-dashboard .tl-nav-btn {
   background: var(--background-primary);

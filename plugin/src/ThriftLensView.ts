@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, normalizePath, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf, normalizePath, setIcon, TFile } from 'obsidian';
 import type ThriftLensPlugin from './main';
 import { loadYear, yearFileExists, getAvailableYears } from './loader';
 import type { BudgetEntry } from './types';
@@ -171,6 +171,12 @@ export class ThriftLensView extends ItemView {
     this.yoyTabBtn.toggleClass('tl-tab-btn--active',    tab === 'yoy');
   }
 
+  private openRegisterFile(year: number): void {
+    const path = normalizePath(`${this.plugin.settings.dataFolder}/${year}.md`);
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (file instanceof TFile) this.app.workspace.getLeaf('tab').openFile(file);
+  }
+
   async refresh(): Promise<void> {
     if (this.refreshing) return;
     this.refreshing = true;
@@ -208,6 +214,7 @@ export class ThriftLensView extends ItemView {
         },
         month === 0  ? yearFileExists(this.app, folder, year - 1) : true,
         month === 11 ? yearFileExists(this.app, folder, year + 1) : true,
+        () => this.openRegisterFile(year),
       );
 
       // Annual nav
@@ -219,6 +226,7 @@ export class ThriftLensView extends ItemView {
         () => { this.state.annualYear++; this.refresh(); },
         yearFileExists(this.app, folder, annualYear - 1),
         yearFileExists(this.app, folder, annualYear + 1),
+        () => this.openRegisterFile(annualYear),
       );
 
       renderMonth(
@@ -234,7 +242,8 @@ export class ThriftLensView extends ItemView {
       );
 
       this.yoyContent.empty();
-      renderYoY(this.yoyContent, allYearsData, new Date().getFullYear(), currency);
+      renderYoY(this.yoyContent, allYearsData, new Date().getFullYear(), currency,
+        year => this.openRegisterFile(year));
 
       this.showTab(this.state.activeTab);
     } finally {

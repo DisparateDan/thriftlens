@@ -12,10 +12,15 @@ export function renderNavBar(
   onNext: () => void,
   prevEnabled = true,
   nextEnabled = true,
+  onLabelClick?: () => void,
 ): void {
   const bar  = parent.createEl('div', { cls: 'tl-nav' });
   const prev = bar.createEl('button', { text: '◀', cls: 'tl-nav-btn' });
-  bar.createEl('span', { text: label, cls: 'tl-nav-label' });
+  const labelEl = bar.createEl('span', { text: label, cls: 'tl-nav-label' });
+  if (onLabelClick) {
+    labelEl.addClass('tl-nav-label--link');
+    labelEl.onclick = onLabelClick;
+  }
   const next = bar.createEl('button', { text: '▶', cls: 'tl-nav-btn' });
   prev.disabled = !prevEnabled;
   next.disabled = !nextEnabled;
@@ -234,6 +239,7 @@ export function renderYoY(
   allYears: { year: number; records: BudgetEntry[] }[],
   currentYear: number,
   currency: string,
+  onYearClick?: (year: number) => void,
 ): void {
   if (allYears.length === 0) {
     parent.createEl('p', { text: 'No registers found.', cls: 'tl-empty' });
@@ -247,7 +253,11 @@ export function renderYoY(
         cls: 'tl-section tl-section--blue' + (isCurrent ? ' tl-section--yoy-current' : ''),
       });
       const header = section.createEl('div', { cls: 'tl-section-header' });
-      header.createEl('span', { text: String(year), cls: 'tl-section-title tl-yoy-year-title' });
+      const yearTitle = header.createEl('span', { text: String(year), cls: 'tl-section-title tl-yoy-year-title' });
+      if (onYearClick) {
+        yearTitle.addClass('tl-nav-label--link');
+        yearTitle.onclick = () => onYearClick(year);
+      }
       if (isCurrent) {
         header.createEl('span', { text: 'Current', cls: 'tl-yoy-current-badge' });
       }
