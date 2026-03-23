@@ -120,7 +120,7 @@ export function renderMonth(
   const totalSpent        = monthSpend.filter(r => r.spend_type === 'actual_spend').reduce((s, r) => s + r.amount, 0);
 
   renderSummaryCards(cardsContainer, [
-    { label: 'Portion of annual estimates', value: fmt(annualInstallment, currency) },
+    { label: 'Monthly share of annual commitments', value: fmt(annualInstallment, currency) },
     { label: 'Planned costs',              value: fmt(fixedCosts, currency)         },
     { label: 'Spend this month',   value: fmt(totalSpent, currency)         },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
@@ -206,7 +206,7 @@ function renderAnnualSummaryTable(
 
   const rows = [
     {
-      label: 'Annual estimates',
+      label: 'Annual commitments',
       total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
       spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
@@ -299,7 +299,7 @@ export function renderAnnual(
 
   // Detail breakdowns
   renderDetailTable(
-    blueContainer, 'Annual estimates detail',
+    blueContainer, 'Annual commitments breakdown',
     annualEstimates,
     year, currency,
     entries => spendByCat[entries[0].spend_category] || 0,
@@ -366,6 +366,6 @@ export function renderAnnual(
     const tfr = table.createEl('tfoot').createEl('tr');
     ['', '', 'Total', fmt(grandTotal, currency)].forEach(v => tfr.createEl('td', { text: v }));
   } else {
-    redContainer.createEl('p', { text: 'No exceptional spend this year.', cls: 'tl-empty' });
+    redContainer.createEl('p', { text: 'No exceptional spending this year.', cls: 'tl-empty' });
   }
 }

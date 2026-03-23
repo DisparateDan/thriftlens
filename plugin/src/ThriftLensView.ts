@@ -98,7 +98,7 @@ export class ThriftLensView extends ItemView {
     commitSection.createEl('div', { cls: 'tl-section-header' })
       .createEl('span', { text: 'Summary', cls: 'tl-section-title' });
     this.cardsContent = commitSection.createEl('div');
-    commitSection.createEl('div', { text: 'Planned costs detail', cls: 'tl-subsection-label' });
+    commitSection.createEl('div', { text: 'Planned costs breakdown', cls: 'tl-subsection-label' });
     this.commitContent = commitSection.createEl('div');
 
     const spendSection = this.monthlyOuter.createEl('div', { cls: 'tl-section tl-section--purple' });
@@ -126,7 +126,7 @@ export class ThriftLensView extends ItemView {
 
     const annualRedSection = this.annualOuter.createEl('div', { cls: 'tl-section tl-section--red' });
     annualRedSection.createEl('div', { cls: 'tl-section-header' })
-      .createEl('span', { text: 'Exceptional spend', cls: 'tl-section-title' });
+      .createEl('span', { text: 'Exceptional spending', cls: 'tl-section-title' });
     this.annualRedContent = annualRedSection.createEl('div');
 
     // ── Year on Year outer ─────────────────────────────────────

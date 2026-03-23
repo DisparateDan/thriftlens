@@ -167,7 +167,7 @@ function renderMonthlySection(
   const totalSpent        = monthSpend.filter(r => r.spend_type === 'actual_spend').reduce((s, r) => s + r.amount, 0);
 
   const summary = summaryTable([
-    { label: 'Portion of annual estimates', value: fmt(annualInstallment, currency) },
+    { label: 'Monthly share of annual commitments', value: fmt(annualInstallment, currency) },
     { label: 'Planned costs',              value: fmt(fixedCosts, currency) },
     { label: 'Spend this month',   value: fmt(totalSpent, currency) },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
@@ -200,7 +200,7 @@ function renderMonthlySection(
     <div class="section section--blue">
       <p class="section-title">${MONTH_NAMES[month]} ${year}</p>
       ${summary}
-      <p class="subsection-label">Planned costs detail</p>
+      <p class="subsection-label">Planned costs breakdown</p>
       ${fixedTable}
       ${txSection}
     </div>`;
@@ -222,7 +222,7 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
 
   const rows = [
     {
-      label: 'Annual estimates',
+      label: 'Annual commitments',
       total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
       spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
@@ -275,7 +275,7 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
 
   const exceptionalSection = exceptionals.length > 0 ? `
     <div class="section section--red">
-      <p class="section-title">Exceptional spend</p>
+      <p class="section-title">Exceptional spending</p>
       ${dataTable(['Date', 'Description', 'Category', 'Amount'], exceptionalRows, ['', '', 'Total', fmt(exceptionalTotal, currency)])}
     </div>` : '';
 
@@ -283,11 +283,11 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
       ${annualSummaryTable}
-      <p class="subsection-label">Annual estimates detail</p>
+      <p class="subsection-label">Annual commitments breakdown</p>
       ${dataTable(detailHeaders, annualDetailRows)}
     </div>
     <div class="section section--purple">
-      <p class="section-title">Monthly planned detail</p>
+      <p class="section-title">Monthly planned breakdown</p>
       ${dataTable(detailHeaders, monthlyDetailRows)}
     </div>
     ${exceptionalSection}`;

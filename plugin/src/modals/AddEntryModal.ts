@@ -197,7 +197,7 @@ export class AddEntryModal extends Modal {
       const closingFence = content.lastIndexOf('\n```');
       if (closingFence === -1) return content;
       const needsHeader = entry.spend_type === 'exceptional' && !content.includes('spend_type: exceptional');
-      const prefix = needsHeader ? '\n# ── Exceptional spend ───────────────────────────────────\n' : '';
+      const prefix = needsHeader ? '\n# ── Exceptional spending ────────────────────────────────\n' : '';
       return content.slice(0, closingFence) + '\n\n' + prefix + serialiseEntry(entry) + '\n' + content.slice(closingFence);
     });
 
