@@ -120,8 +120,8 @@ export function renderMonth(
   const totalSpent        = monthSpend.filter(r => r.spend_type === 'actual_spend').reduce((s, r) => s + r.amount, 0);
 
   renderSummaryCards(cardsContainer, [
-    { label: 'Annual installment', value: fmt(annualInstallment, currency) },
-    { label: 'Fixed costs',        value: fmt(fixedCosts, currency)         },
+    { label: 'Portion of annual estimates', value: fmt(annualInstallment, currency) },
+    { label: 'Planned costs',              value: fmt(fixedCosts, currency)         },
     { label: 'Spend this month',   value: fmt(totalSpent, currency)         },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
@@ -211,7 +211,7 @@ function renderAnnualSummaryTable(
       spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
-      label: 'Monthly fixed',
+      label: 'Monthly planned',
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
       spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },

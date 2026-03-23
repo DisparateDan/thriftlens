@@ -109,7 +109,7 @@ export class AddEntryModal extends Modal {
       .setName('Spend type')
       .addDropdown(d => d
         .addOption('actual_spend',    'Actual spend')
-        .addOption('monthly_fixed',   'Monthly fixed')
+        .addOption('monthly_fixed',   'Monthly planned')
         .addOption('annual_estimate', 'Annual estimate')
         .addOption('exceptional',     'Exceptional')
         .setValue(this.form.spend_type)
