@@ -189,7 +189,6 @@ function renderAnnualSummaryTable(
   const actuals       = records.filter(r => r.spend_type === 'actual_spend');
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
-  const monthlyFixedCats = new Set(monthlyFixeds.map(r => r.spend_category));
 
   const rows = [
     {
@@ -200,7 +199,7 @@ function renderAnnualSummaryTable(
     {
       label: 'Monthly Fixed',
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
-      spent: actuals.filter(r => monthlyFixedCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
+      spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },
   ];
 
@@ -282,7 +281,7 @@ export function renderAnnual(
     purpleContainer, 'Monthly Fixed Detail',
     monthlyFixeds,
     year, currency,
-    entries => spendByCat[entries[0].spend_category] || 0,
+    entries => entries.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
   );
 
   // Unplanned: actuals with no plan counterpart
