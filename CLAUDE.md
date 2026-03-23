@@ -4,107 +4,117 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ThriftLens** — an Obsidian vault for personal cashflow dashboarding using DataviewJS dashboards that query structured markdown data files.
+**ThriftLens** — a standalone Obsidian plugin for personal cashflow dashboarding. Data lives in structured markdown files; the plugin reads, renders, and manages them via the Obsidian vault API.
 
 Don't show me any code diffs or code output in the chat stream. I'll check them myself if I want to see.
 
+Don't modify real data files at `/home/dan/Obsidian/PersonalDB/thriftLens/` unless explicitly asked. Analyse, but don't touch.
+
 ## Data Model
 
-### Budget Record Files
+### Register Files
 
-- Location: `vault/budget/<year>.md` (one file per year)
+- Location: `thriftLens/<year>.md` (one file per year, within the configured data folder)
 - Records stored as a YAML fenced block in the file body (not frontmatter)
 - Frontmatter identifies the file type and year
 
 ```yaml
 ---
 tl_type: register
-year: 2025
+year: 2026
 ---
-```
-
-```yaml
-- date: 2025-01-05
-  amount: 94.80
-  spend_type: spend
-  periodicity: monthly
-  description: Groceries
 ```
 
 ### Record Schema
 
 | Field | Values |
 |-------|--------|
-| `date` | `YYYY-MM-DD` |
-| `amount` | numeric (no currency symbol) |
-| `spend_type` | `planned_known` \| `planned_estimate` \| `actual_spend` |
-| `periodicity` | `monthly` \| `annual` |
-| `description` | free text |
-| `valid_until` | `YYYY-MM-DD` (omitted by default; only present for mid-year expiry) |
-| `spend_category` | short slug grouping related records across spend types (e.g. `heating_oil`, `rent`) |
+| `date` | `YYYY-MM-DD` — transaction date for `actual_spend`; conventionally `YYYY-01-01` for plan entries |
+| `amount` | numeric (no currency symbol) — monthly amount for `monthly_fixed`; full-year amount for `annual_estimate` |
+| `spend_type` | `monthly_fixed` \| `annual_estimate` \| `actual_spend` |
+| `spend_category` | short slug grouping related records (e.g. `heating`, `rent`, `driving`) |
+| `description` | free text label |
+| `valid_until` | `YYYY-MM-DD` — optional; `monthly_fixed` only; marks a mid-year expiry |
 
 ### spend_type semantics
 
-- **planned_known** — recurring cost with a known amount (rent, phone, insurance premium)
-- **planned_estimate** — earmarked cost with an estimated amount (heating oil, property tax, holiday, projects); money is spoken for even if not yet paid
-- **actual_spend** — actual recorded transaction (whether realising a planned expense or genuinely ad-hoc); `valid_until` omitted
+- **monthly_fixed** — recurring cost with a known fixed monthly amount (rent, phone, broadband). `valid_until` may be set for mid-year expiry. No `periodicity` field.
+- **annual_estimate** — money earmarked for something with an estimated annual cost (heating oil, insurance, holidays, projects). Amount is the full-year figure. No `periodicity` field.
+- **actual_spend** — a real recorded transaction, whether it realises a planned expense or is entirely ad hoc. Always taken at face value; no scaling applied.
 
-Both `planned_known` and `planned_estimate` form the planned baseline. Together with `actual_spend` they give the full cost picture. There is no discretionary budget concept — ad hoc spend simply appears as `actual_spend` records only.
+### Amount interpretation
 
-### Amount interpretation by periodicity
+| spend_type | Monthly view | Annual view |
+|---|---|---|
+| `monthly_fixed` | amount as-is | amount × months active in year |
+| `annual_estimate` | amount ÷ 12 | amount as-is |
+| `actual_spend` | face value | face value |
 
-`repeating` and `committed` records follow the same rule:
-
-| periodicity | Amount means | Monthly view | Annual view |
-|---|---|---|---|
-| `monthly` | monthly amount | `amount` | `amount × months_active_in_year` |
-| `annual` | full annual amount | `amount ÷ 12` | `amount` |
-
-`spend` records are always taken at face value — no multiplication.
-
-An annual `actual_spend` record coexists with its `planned_known,annual` counterpart: the planned record drives the amortised committed view; the actual_spend record tracks the real cash outflow. They share the same `spend_category`.
-
-### periodicity semantics
-
-- **monthly** — costs that recur every month (rent, phone, utilities, groceries)
-- **annual** — everything else: taxes, insurance, fuel, holidays, repairs, one-off projects
+Monthly fixed spend-to-date is computed as `amount × months_elapsed` — no actual transaction matching needed.
 
 ### spend_category
 
-Every record carries a `spend_category` slug (e.g. `heating_oil`, `rent`, `groceries`). This enables grouping and comparison across spend types without fuzzy description matching:
+Every record carries a `spend_category` slug. This is the join key between planned and actual records:
 
-- Actual spend for a category: sum `actual_spend` records with that `spend_category`
-- Budget for a category: the `planned_estimate` or `planned_known` record with the same `spend_category`
-- Carry-forward: annual `planned_known` records are seeded from the prior year's `actual_spend` total for the same `spend_category`
+- Multiple plan records can share a `spend_category` to form a bucket (e.g. several `driving` costs). The annual view shows a combined total with an expandable row.
+- `annual_estimate` actuals are matched by `spend_category` to compute spend-to-date.
+- Carry-forward seeds `annual_estimate` amounts from the prior year's `actual_spend` total for the same `spend_category`.
+- Choose slugs by **planning behaviour**, not real-world meaning. A fixed monthly coffee subscription belongs in `subscriptions`, not `groceries`, if you want grocery actuals to appear as unplanned.
 
 ### Carry-forward behaviour
 
-| spend_type + periodicity | New year behaviour |
+| spend_type | New year behaviour |
 |---|---|
-| `planned_known` + `monthly` | Clone record into new year's file as-is |
-| `planned_known` + `annual` | Create new record; seed amount from prior year's `actual_spend` total for same `spend_category` |
-| `planned_estimate` | Always entered explicitly; never auto-carried |
+| `monthly_fixed` | Cloned into new year as-is (date = Jan 1, valid_until cleared) |
+| `annual_estimate` | Amount seeded from prior year's `actual_spend` total for same `spend_category`; falls back to source amount if no actuals found |
+| `actual_spend` | Never carried forward |
 
-## Dashboard Files
+## Plugin Architecture
 
-DataviewJS dashboards live at `vault/dashboards/`. Records are parsed from the YAML fenced block in the file body:
+The plugin is a TypeScript/esbuild Obsidian plugin. Source in `plugin/src/`, output deployed to the vault's `.obsidian/plugins/thriftlens/`.
 
-```js
-const page = dv.pages('"budget"').where(p => p.tl_type === 'record' && p.year === year).first();
+### Key source files
+
+| File | Role |
+|---|---|
+| `main.ts` | Plugin entry point, command registration |
+| `ThriftLensView.ts` | ItemView subclass — three-tab dashboard (Monthly, Annual, Year on Year) |
+| `logic.ts` | Pure business logic — no Obsidian imports; fully unit-tested |
+| `parser.ts` | YAML block parsing and entry serialisation |
+| `loader.ts` | Vault file reading via Obsidian API |
+| `renderer.ts` | DOM rendering for all three views |
+| `exporter.ts` | Self-contained HTML report generation |
+| `carryForward.ts` | Carry-forward proposal logic |
+| `csvUtils.ts` | Shared CSV parsing/serialisation utilities |
+| `settings.ts` | Plugin settings (currency symbol, data folder, default view) |
+| `modals/AddEntryModal.ts` | Log an expense — date in DD-MM-YYYY for actuals; year only for plan entries |
+| `modals/CarryForwardModal.ts` | Plan next year — review and confirm carry-forward proposal |
+| `modals/CreateRecordModal.ts` | Create a new year register |
+| `modals/ImportCsvModal.ts` | Bulk import from CSV |
+| `modals/ExportCsvModal.ts` | Export register to CSV |
+
+### Build and deploy
+
+Run from `plugin/`:
+
+```bash
+npm run build    # production build
+npm run dev      # watch mode
+npm run deploy   # build + copy to dev vault
+npm run test     # Vitest unit tests
 ```
 
-Dataview parses YAML dates as Luxon DateTime objects — normalise to JS Date via `val.toJSDate()`.
+Default deploy target is the **dev vault** (`vault/`). Deploy to the real vault (`~/Obsidian/PersonalDB`) only when explicitly asked, using `./deploy-to-real-vault.sh thriftlens` from the repo root.
 
-## Plugin Migration Path
+**Always bump `manifest.json` version before deploying a material change** — this is how the user verifies Obsidian picked up the new build.
 
-The long-term goal is to extract the dashboards into a standalone Obsidian plugin, leaving only data files (`budget/*.md`) in the vault.
+## Testing
 
-**Design rule**: DataviewJS blocks must be thin wrappers. All parsing, aggregation, and budget logic lives in plain JS functions defined at the top of the block (or in a shared helper file). These functions have no dependency on DataviewJS APIs — only the file-reading and rendering calls touch `dv.*`.
+Unit tests live in `plugin/tests/`. Fixture registers for integration tests are in `plugin/tests/fixtures/`. Run with `npm run test` (requires Node v20+ via nvm).
 
-This means migration is a two-step swap:
-1. Replace `dv.pages(...)` file reading → `app.vault` + `app.metadataCache`
-2. Replace `dv.table(...)` rendering → Obsidian `ItemView` DOM / Markdown rendering
-
-The core logic functions move unchanged.
-
-Plugin stack when ready: TypeScript, esbuild, `obsidian` npm package (types + API).
+Test files:
+- `logic.test.ts` — pure logic functions
+- `parser.test.ts` — YAML parsing and serialisation roundtrip
+- `carryForward.test.ts` — carry-forward proposal rules
+- `csvUtils.test.ts` — CSV parsing and serialisation
+- `integration.test.ts` — full parse→compute pipeline using fixture files
