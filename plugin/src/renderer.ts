@@ -139,7 +139,7 @@ function renderDetailTable(
     byCategory.get(r.spend_category)!.push(r);
   }
 
-  parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
+  if (subtitle) parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
   const table = parent.createEl('table', { cls: 'tl-table tl-detail-table' });
   const hr    = table.createEl('thead').createEl('tr');
   ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
@@ -286,7 +286,7 @@ export function renderAnnual(
     entries => spendByCat[entries[0].spend_category] || 0,
   );
   renderDetailTable(
-    purpleContainer, 'Monthly Fixed Detail',
+    purpleContainer, '',
     monthlyFixeds,
     year, currency,
     entries => entries.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),

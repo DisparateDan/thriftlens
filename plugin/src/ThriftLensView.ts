@@ -115,7 +115,7 @@ export class ThriftLensView extends ItemView {
 
     const annualPurpleSection = this.annualOuter.createEl('div', { cls: 'tl-section tl-section--purple' });
     annualPurpleSection.createEl('div', { cls: 'tl-section-header' })
-      .createEl('span', { text: 'Planned Fixed Costs', cls: 'tl-section-title' });
+      .createEl('span', { text: 'Planned Monthly Costs Breakdown', cls: 'tl-section-title' });
     this.annualPurpleContent = annualPurpleSection.createEl('div');
 
     const annualGreenSection = this.annualOuter.createEl('div', { cls: 'tl-section tl-section--green' });
