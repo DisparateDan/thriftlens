@@ -504,6 +504,10 @@
   letter-spacing: 0.02em;
 }
 
+.tl-dashboard .tl-section--yoy-current .tl-table tfoot td {
+  color: rgba(220, 160, 60, 0.9);
+}
+
 .tl-dashboard .tl-yoy-current-badge {
   font-size: 0.68em;
   font-weight: 700;
