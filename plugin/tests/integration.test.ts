@@ -79,6 +79,27 @@ describe('2024 fixture (complete past year)', () => {
     const total = drivingActuals.reduce((sum, r) => sum + r.amount, 0);
     expect(total).toBeCloseTo(770, 2);
   });
+
+  it('exceptional spend total = 8500', () => {
+    const exceptionals = records2024.filter(r => r.spend_type === 'exceptional');
+    expect(exceptionals).toHaveLength(1);
+    const total = exceptionals.reduce((sum, r) => sum + r.amount, 0);
+    expect(total).toBe(8500);
+  });
+
+  it('exceptional entry appears in spendInMonth for December', () => {
+    const dec = spendInMonth(records2024, 2024, 11);
+    const exceptional = dec.filter(r => r.spend_type === 'exceptional');
+    expect(exceptional).toHaveLength(1);
+    expect(exceptional[0].spend_category).toBe('roof_repairs');
+    expect(exceptional[0].amount).toBe(8500);
+  });
+
+  it('exceptional entry is excluded from carry-forward', () => {
+    const proposal = buildProposal(records2024, 2024, 2025);
+    const exceptionalInProposal = proposal.filter(p => p.spend_type === 'exceptional');
+    expect(exceptionalInProposal).toHaveLength(0);
+  });
 });
 
 // ── 2024 → 2025 carry-forward ─────────────────────────────────

@@ -61,6 +61,25 @@ describe('buildProposal', () => {
     expect(proposal).toHaveLength(0);
   });
 
+  it('excludes exceptional records entirely', () => {
+    const records = [
+      entry({ spend_type: 'exceptional', amount: 8500, spend_category: 'roof_repairs' }),
+    ];
+    const proposal = buildProposal(records, 2025, 2026);
+    expect(proposal).toHaveLength(0);
+  });
+
+  it('exceptional spend does not affect annual_estimate seeding for other categories', () => {
+    const records = [
+      entry({ spend_type: 'annual_estimate', amount: 1000, spend_category: 'heating' }),
+      entry({ spend_type: 'exceptional',     amount: 8500, spend_category: 'roof_repairs' }),
+    ];
+    const proposal = buildProposal(records, 2025, 2026);
+    expect(proposal).toHaveLength(1);
+    expect(proposal[0].spend_category).toBe('heating');
+    expect(proposal[0].amount).toBe(1000); // no actuals for heating, falls back to source
+  });
+
   it('does not carry valid_until to the new year', () => {
     const records = [
       entry({

@@ -139,16 +139,22 @@ describe('monthsToDate', () => {
 
 describe('spendInMonth', () => {
   const records: BudgetEntry[] = [
-    entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 5),  amount: 50  }),
-    entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 20), amount: 30  }),
-    entry({ spend_type: 'actual_spend', date: new Date(2025, 3, 1),  amount: 100 }),
-    entry({ spend_type: 'monthly_fixed', date: new Date(2025, 2, 1), amount: 850 }),
+    entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 5),  amount: 50   }),
+    entry({ spend_type: 'actual_spend', date: new Date(2025, 2, 20), amount: 30   }),
+    entry({ spend_type: 'exceptional',  date: new Date(2025, 2, 15), amount: 5000 }),
+    entry({ spend_type: 'actual_spend', date: new Date(2025, 3, 1),  amount: 100  }),
+    entry({ spend_type: 'monthly_fixed', date: new Date(2025, 2, 1), amount: 850  }),
   ];
 
-  it('returns only actual_spend in the given month', () => {
+  it('returns actual_spend and exceptional in the given month', () => {
     const march = spendInMonth(records, 2025, 2);
-    expect(march).toHaveLength(2);
-    expect(march.every(r => r.spend_type === 'actual_spend')).toBe(true);
+    expect(march).toHaveLength(3);
+    expect(march.every(r => r.spend_type === 'actual_spend' || r.spend_type === 'exceptional')).toBe(true);
+  });
+
+  it('excludes monthly_fixed records', () => {
+    const march = spendInMonth(records, 2025, 2);
+    expect(march.some(r => r.spend_type === 'monthly_fixed')).toBe(false);
   });
 
   it('excludes other months', () => {
