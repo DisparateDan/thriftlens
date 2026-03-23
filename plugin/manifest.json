@@ -3,7 +3,7 @@
   "name": "ThriftLens",
   "version": "0.4.5",
   "minAppVersion": "1.4.0",
-  "description": "Personal cashflow dashboard",
+  "description": "A personal cashflow dashboard: committed spend, actuals, and cost of living shown by year and month.",
   "author": "Dan Pusceddu",
   "authorUrl": "https://github.com/DisparateDan",
   "isDesktopOnly": false,
