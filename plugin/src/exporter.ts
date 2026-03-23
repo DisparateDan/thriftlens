@@ -166,9 +166,9 @@ function renderMonthlySection(
   const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
   const summary = summaryTable([
-    { label: 'Annual Installment', value: fmt(annualInstallment, currency) },
-    { label: 'Fixed Costs',        value: fmt(fixedCosts, currency) },
-    { label: 'Spend This Month',   value: fmt(totalSpent, currency) },
+    { label: 'Annual installment', value: fmt(annualInstallment, currency) },
+    { label: 'Fixed costs',        value: fmt(fixedCosts, currency) },
+    { label: 'Spend this month',   value: fmt(totalSpent, currency) },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
 
@@ -179,7 +179,7 @@ function renderMonthlySection(
     fixedTotal += r.amount;
     fixedRows.push([r.description, fmt(r.amount, currency)]);
   });
-  const fixedTable = dataTable(['Description', 'Per Month'], fixedRows, ['Total', fmt(fixedTotal, currency)]);
+  const fixedTable = dataTable(['Description', 'Per month'], fixedRows, ['Total', fmt(fixedTotal, currency)]);
 
   // Transactions
   const txRows: string[][] = [...monthSpend]
@@ -199,7 +199,7 @@ function renderMonthlySection(
     <div class="section section--blue">
       <p class="section-title">${MONTH_NAMES[month]} ${year}</p>
       ${summary}
-      <p class="subsection-label">Fixed Costs Detail</p>
+      <p class="subsection-label">Fixed costs detail</p>
       ${fixedTable}
       ${txSection}
     </div>`;
@@ -219,12 +219,12 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
 
   const rows = [
     {
-      label: 'Annual Estimates',
+      label: 'Annual estimates',
       total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
       spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
-      label: 'Monthly Fixed',
+      label: 'Monthly fixed',
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
       spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },
@@ -237,7 +237,7 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     r.label, fmt(r.total, currency), fmt(r.spent, currency), fmt(r.total - r.spent, currency),
   ]);
   const annualSummaryTable = dataTable(
-    ['Category', 'Total', 'Spend To Date', 'Remaining'],
+    ['Category', 'Total', 'Spend to date', 'Remaining'],
     summaryRows,
     ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)],
   );
@@ -256,17 +256,17 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     return [fmtCat(r.spend_category), fmt(total, currency), fmt(spent, currency), fmt(total - spent, currency)];
   });
 
-  const detailHeaders = ['Category', 'Total', 'Spend To Date', 'Remaining'];
+  const detailHeaders = ['Category', 'Total', 'Spend to date', 'Remaining'];
 
   return `
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
       ${annualSummaryTable}
-      <p class="subsection-label">Annual Estimates Detail</p>
+      <p class="subsection-label">Annual estimates detail</p>
       ${dataTable(detailHeaders, annualDetailRows)}
     </div>
     <div class="section section--purple">
-      <p class="section-title">Monthly Fixed Detail</p>
+      <p class="section-title">Monthly fixed detail</p>
       ${dataTable(detailHeaders, monthlyDetailRows)}
     </div>`;
 }

@@ -49,7 +49,7 @@ export function renderCommitmentsTable(
 ): void {
   const table = parent.createEl('table', { cls: 'tl-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Description', 'Per Month'].forEach(h => hr.createEl('th', { text: h }));
+  ['Description', 'Per month'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   let tMonthly = 0;
 
@@ -120,9 +120,9 @@ export function renderMonth(
   const totalSpent        = monthSpend.reduce((s, r) => s + r.amount, 0);
 
   renderSummaryCards(cardsContainer, [
-    { label: 'Annual Installment', value: fmt(annualInstallment, currency) },
-    { label: 'Fixed Costs',        value: fmt(fixedCosts, currency)         },
-    { label: 'Spend This Month',   value: fmt(totalSpent, currency)         },
+    { label: 'Annual installment', value: fmt(annualInstallment, currency) },
+    { label: 'Fixed costs',        value: fmt(fixedCosts, currency)         },
+    { label: 'Spend this month',   value: fmt(totalSpent, currency)         },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
 
@@ -147,7 +147,7 @@ function renderDetailTable(
   if (subtitle) parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
   const table = parent.createEl('table', { cls: 'tl-table tl-detail-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Total', 'Spend to date', 'Remaining commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
 
   for (const [cat, entries] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -205,12 +205,12 @@ function renderAnnualSummaryTable(
 
   const rows = [
     {
-      label: 'Annual Estimates',
+      label: 'Annual estimates',
       total: annualEstimates.reduce((s, r) => s + annualValue(r, year), 0),
       spent: actuals.filter(r => annualEstimateCats.has(r.spend_category)).reduce((s, r) => s + r.amount, 0),
     },
     {
-      label: 'Monthly Fixed',
+      label: 'Monthly fixed',
       total: monthlyFixeds.reduce((s, r) => s + annualValue(r, year), 0),
       spent: monthlyFixeds.reduce((s, r) => s + r.amount * monthsToDate(r, year), 0),
     },
@@ -218,7 +218,7 @@ function renderAnnualSummaryTable(
 
   const table = parent.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend To Date', 'Remaining Commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Total', 'Spend to date', 'Remaining commitment'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   rows.forEach(({ label, total, spent }) => {
     const tr = tbody.createEl('tr');
@@ -290,7 +290,7 @@ export function renderAnnual(
 
   // Detail breakdowns
   renderDetailTable(
-    blueContainer, 'Annual Estimates Detail',
+    blueContainer, 'Annual estimates detail',
     annualEstimates,
     year, currency,
     entries => spendByCat[entries[0].spend_category] || 0,
@@ -321,7 +321,7 @@ export function renderAnnual(
   if (unplannedByCat.size > 0) {
     const table = greenContainer.createEl('table', { cls: 'tl-table' });
     const hr    = table.createEl('thead').createEl('tr');
-    ['Category', 'Transactions', 'Spend To Date'].forEach(h => hr.createEl('th', { text: h }));
+    ['Category', 'Transactions', 'Spend to date'].forEach(h => hr.createEl('th', { text: h }));
     const tbody = table.createEl('tbody');
     let grandTotal = 0;
     for (const [cat, { total, count }] of [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0]))) {

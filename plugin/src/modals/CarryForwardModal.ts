@@ -34,7 +34,7 @@ export class CarryForwardModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass('tl-carry-modal');
-    contentEl.createEl('h2', { text: 'Plan Next Year' });
+    contentEl.createEl('h2', { text: 'Plan next year' });
 
     const years = getAvailableYears(this.app, this.plugin.settings.dataFolder);
 
@@ -79,7 +79,7 @@ export class CarryForwardModal extends Modal {
   private async loadAndRender(): Promise<void> {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: `Plan Next Year: ${this.sourceYear} → ${this.targetYear}` });
+    contentEl.createEl('h2', { text: `Plan next year: ${this.sourceYear} → ${this.targetYear}` });
 
     const loading = contentEl.createEl('p', { text: 'Loading source records…' });
     const sourceRecords = await loadYear(this.app, this.plugin.settings.dataFolder, this.sourceYear);

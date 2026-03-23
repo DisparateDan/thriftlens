@@ -47,7 +47,7 @@ export class AddEntryModal extends Modal {
   async onOpen(): Promise<void> {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: 'Log Entry' });
+    contentEl.createEl('h2', { text: 'Log entry' });
 
     if (Platform.isMobile) {
       contentEl.style.paddingBottom = '50vh';

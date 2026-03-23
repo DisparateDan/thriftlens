@@ -14,7 +14,7 @@ export class CreateRecordModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl('h2', { text: 'Create Record' });
+    contentEl.createEl('h2', { text: 'Create record' });
 
     if (Platform.isMobile) {
       contentEl.style.paddingBottom = '50vh';
