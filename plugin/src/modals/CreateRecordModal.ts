@@ -17,7 +17,7 @@ export class CreateRecordModal extends Modal {
     contentEl.createEl('h2', { text: 'Create record' });
 
     if (Platform.isMobile) {
-      contentEl.style.paddingBottom = '50vh';
+      contentEl.addClass('tl-modal-mobile');
       contentEl.addEventListener('focus', e => {
         (e.target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, true);

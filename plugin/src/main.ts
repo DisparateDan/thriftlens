@@ -64,10 +64,6 @@ export default class ThriftLensPlugin extends Plugin {
     this.addSettingTab(new ThriftLensSettingTab(this.app, this));
   }
 
-  onunload(): void {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE);
-  }
-
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }

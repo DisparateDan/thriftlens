@@ -50,7 +50,7 @@ export class AddEntryModal extends Modal {
     contentEl.createEl('h2', { text: 'Log entry' });
 
     if (Platform.isMobile) {
-      contentEl.style.paddingBottom = '50vh';
+      contentEl.addClass('tl-modal-mobile');
       contentEl.addEventListener('focus', e => {
         (e.target as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, true);
@@ -126,11 +126,11 @@ export class AddEntryModal extends Modal {
         .onChange(v => { this.form.validUntilStr = v.trim(); }));
 
     const updateVisibility = (spendType: BudgetEntry['spend_type']) => {
-      const isActual        = spendType === 'actual_spend' || spendType === 'exceptional';
-      const isMonthlyFixed  = spendType === 'monthly_fixed';
-      dateSetting.settingEl.style.display     = isActual       ? '' : 'none';
-      yearSetting.settingEl.style.display     = isActual       ? 'none' : '';
-      validUntilRow.settingEl.style.display   = isMonthlyFixed ? '' : 'none';
+      const isActual       = spendType === 'actual_spend' || spendType === 'exceptional';
+      const isMonthlyFixed = spendType === 'monthly_fixed';
+      dateSetting.settingEl.toggleClass('tl-hidden',    !isActual);
+      yearSetting.settingEl.toggleClass('tl-hidden',    isActual);
+      validUntilRow.settingEl.toggleClass('tl-hidden',  !isMonthlyFixed);
     };
 
     updateVisibility(this.form.spend_type);

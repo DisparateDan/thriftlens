@@ -103,12 +103,10 @@ export function renderMonth(
   const now            = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
+  dayInfoEl.toggleClass('tl-hidden', !isCurrentMonth);
   if (isCurrentMonth) {
-    const daysInMonth      = new Date(year, month + 1, 0).getDate();
-    dayInfoEl.textContent  = `Day ${now.getDate()} of ${daysInMonth} — month in progress`;
-    dayInfoEl.style.display = '';
-  } else {
-    dayInfoEl.style.display = 'none';
+    const daysInMonth     = new Date(year, month + 1, 0).getDate();
+    dayInfoEl.textContent = `Day ${now.getDate()} of ${daysInMonth} — month in progress`;
   }
 
   const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');

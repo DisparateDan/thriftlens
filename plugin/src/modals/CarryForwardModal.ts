@@ -116,7 +116,7 @@ export class CarryForwardModal extends Modal {
         .setButtonText('Cancel')
         .onClick(() => this.close()))
       .addButton(b => {
-        b.setButtonText('Confirm & Write').setCta().onClick(() => this.confirm());
+        b.setButtonText('Confirm & write').setCta().onClick(() => this.confirm());
         this.confirmBtn = b.buttonEl;
       });
   }

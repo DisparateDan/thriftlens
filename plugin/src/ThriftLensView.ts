@@ -4,7 +4,7 @@ import { loadYear, yearFileExists, getAvailableYears } from './loader';
 import type { BudgetEntry } from './types';
 import { MONTH_NAMES } from './logic';
 import {
-  renderNavBar, renderSummaryCards, renderCommitmentsTable,
+  renderNavBar, renderCommitmentsTable,
   renderMonth, renderAnnual, renderYoY,
 } from './renderer';
 import { AddEntryModal }     from './modals/AddEntryModal';
@@ -91,8 +91,7 @@ export class ThriftLensView extends ItemView {
 
     // ── Monthly outer ──────────────────────────────────────────
     this.monthlyOuter = root.createEl('div', { cls: 'tl-tab-pane' });
-    this.dayInfoEl    = this.monthlyOuter.createEl('div', { cls: 'tl-day-info' });
-    this.dayInfoEl.style.display = 'none';
+    this.dayInfoEl    = this.monthlyOuter.createEl('div', { cls: 'tl-day-info tl-hidden' });
 
     const commitSection = this.monthlyOuter.createEl('div', { cls: 'tl-section tl-section--blue' });
     commitSection.createEl('div', { cls: 'tl-section-header' })
@@ -146,14 +145,14 @@ export class ThriftLensView extends ItemView {
       this.state.year  = now.getFullYear();
       this.state.month = now.getMonth();
       this.showTab('monthly');
-      this.refresh();
+      void this.refresh();
     };
 
     // Refresh when any file in the data folder changes
     const dataPath = normalizePath(this.plugin.settings.dataFolder);
     this.registerEvent(
       this.app.vault.on('modify', file => {
-        if (file.path.startsWith(dataPath)) this.refresh();
+        if (file.path.startsWith(dataPath)) void this.refresh();
       }),
     );
 
@@ -167,11 +166,11 @@ export class ThriftLensView extends ItemView {
 
   private showTab(tab: 'monthly' | 'annual' | 'yoy'): void {
     this.state.activeTab = tab;
-    this.monthlyOuter.style.display = tab === 'monthly' ? '' : 'none';
-    this.annualOuter.style.display  = tab === 'annual'  ? '' : 'none';
-    this.yoyOuter.style.display     = tab === 'yoy'     ? '' : 'none';
-    this.monthNav.style.display     = tab === 'monthly' ? 'flex' : 'none';
-    this.annualNav.style.display    = tab === 'annual'  ? 'flex' : 'none';
+    this.monthlyOuter.toggleClass('tl-hidden', tab !== 'monthly');
+    this.annualOuter.toggleClass('tl-hidden',  tab !== 'annual');
+    this.yoyOuter.toggleClass('tl-hidden',     tab !== 'yoy');
+    this.monthNav.toggleClass('tl-hidden',     tab !== 'monthly');
+    this.annualNav.toggleClass('tl-hidden',    tab !== 'annual');
     this.monthTabBtn.toggleClass('tl-tab-btn--active',  tab === 'monthly');
     this.annualTabBtn.toggleClass('tl-tab-btn--active', tab === 'annual');
     this.yoyTabBtn.toggleClass('tl-tab-btn--active',    tab === 'yoy');
@@ -211,12 +210,12 @@ export class ThriftLensView extends ItemView {
         () => {
           this.state.month--;
           if (this.state.month < 0) { this.state.month = 11; this.state.year--; }
-          this.refresh();
+          void this.refresh();
         },
         () => {
           this.state.month++;
           if (this.state.month > 11) { this.state.month = 0; this.state.year++; }
-          this.refresh();
+          void this.refresh();
         },
         month === 0  ? yearFileExists(this.app, folder, year - 1) : true,
         month === 11 ? yearFileExists(this.app, folder, year + 1) : true,
@@ -228,8 +227,8 @@ export class ThriftLensView extends ItemView {
       renderNavBar(
         this.annualNav,
         String(annualYear),
-        () => { this.state.annualYear--; this.refresh(); },
-        () => { this.state.annualYear++; this.refresh(); },
+        () => { this.state.annualYear--; void this.refresh(); },
+        () => { this.state.annualYear++; void this.refresh(); },
         yearFileExists(this.app, folder, annualYear - 1),
         yearFileExists(this.app, folder, annualYear + 1),
         () => this.openRegisterFile(annualYear),

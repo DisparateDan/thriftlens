@@ -217,6 +217,7 @@
 }
 
 .tl-dashboard .tl-nav-slot {
+  display: flex;
   align-items: center;
   flex-shrink: 0;
 }
@@ -674,4 +675,14 @@
 .tl-carry-modal .tl-carry-add-btn:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
+}
+
+/* ─── Utility ───────────────────────────────────────────────────── */
+
+.tl-hidden {
+  display: none !important;
+}
+
+.tl-modal-mobile {
+  padding-bottom: 50vh;
 }

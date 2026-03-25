@@ -1,8 +1,8 @@
 import type { BudgetEntry } from './types';
 
 export function parseDate(str: unknown): Date | null {
-  if (!str || !String(str).trim()) return null;
-  const [y, m, d] = String(str).trim().split('-').map(Number);
+  if (typeof str !== 'string' || !str.trim()) return null;
+  const [y, m, d] = str.trim().split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
