@@ -40,7 +40,7 @@ export class CarryForwardModal extends Modal {
 
     if (years.length === 0) {
       contentEl.createEl('p', {
-        text: 'No registers found. Create one first using New Register.',
+        text: 'No registers found. Create one first using "New register".',
         cls: 'tl-carry-intro',
       });
       new Setting(contentEl).addButton(b => b.setButtonText('Close').onClick(() => this.close()));
@@ -116,7 +116,7 @@ export class CarryForwardModal extends Modal {
         .setButtonText('Cancel')
         .onClick(() => this.close()))
       .addButton(b => {
-        b.setButtonText('Confirm & write').setCta().onClick(() => this.confirm());
+        b.setButtonText('Confirm & Write').setCta().onClick(() => this.confirm());
         this.confirmBtn = b.buttonEl;
       });
   }
