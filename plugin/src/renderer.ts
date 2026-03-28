@@ -145,7 +145,7 @@ function renderDetailTable(
   if (subtitle) parent.createEl('div', { text: subtitle, cls: 'tl-subsection-label' });
   const table = parent.createEl('table', { cls: 'tl-table tl-detail-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend to date', 'Remaining commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Spend to date', 'Remaining commitment', 'Total'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
 
   for (const [cat, entries] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
@@ -157,9 +157,9 @@ function renderDetailTable(
     const catCell = tr.createEl('td');
     if (expandable) catCell.createEl('span', { text: '▶', cls: 'tl-chevron' });
     catCell.createEl('span', { text: fmtCat(cat) });
-    tr.createEl('td', { text: fmt(total, currency) });
     tr.createEl('td', { text: spent ? fmt(spent, currency) : '—' });
     tr.createEl('td', { text: fmt(total - spent, currency) });
+    tr.createEl('td', { text: fmt(total, currency) });
 
     if (expandable) {
       const subRows = [...entries]
@@ -168,7 +168,6 @@ function renderDetailTable(
           const sub = tbody.createEl('tr', { cls: 'tl-detail-sub' });
           sub.createEl('td', { text: r.description, cls: 'tl-detail-sub-desc' });
           const subTotal = annualValue(r, year);
-          sub.createEl('td', { text: fmt(subTotal, currency) });
           if (subSpentFn) {
             const subSpent = subSpentFn(r);
             sub.createEl('td', { text: fmt(subSpent, currency) });
@@ -177,6 +176,7 @@ function renderDetailTable(
             sub.createEl('td', { text: '—' });
             sub.createEl('td', { text: '—' });
           }
+          sub.createEl('td', { text: fmt(subTotal, currency) });
           return sub;
         });
 
@@ -201,6 +201,13 @@ function renderAnnualSummaryTable(
   const exceptionals  = records.filter(r => r.spend_type === 'exceptional');
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
+  const allPlanCats        = new Set([
+    ...annualEstimates.map(r => r.spend_category),
+    ...monthlyFixeds.map(r => r.spend_category),
+  ]);
+  const unplannedTotal = actuals
+    .filter(r => !allPlanCats.has(r.spend_category))
+    .reduce((s, r) => s + r.amount, 0);
 
   const rows = [
     {
@@ -222,19 +229,25 @@ function renderAnnualSummaryTable(
 
   const table = parent.createEl('table', { cls: 'tl-table tl-annual-summary-table' });
   const hr    = table.createEl('thead').createEl('tr');
-  ['Category', 'Total', 'Spend to date', 'Remaining commitment'].forEach(h => hr.createEl('th', { text: h }));
+  ['Category', 'Spend to date', 'Remaining commitment', 'Total'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   rows.forEach(({ label, total, spent }) => {
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: label });
-    tr.createEl('td', { text: fmt(total, currency),         attr: { 'data-label': 'Total' } });
     tr.createEl('td', { text: fmt(spent, currency),         attr: { 'data-label': 'Spent' } });
     tr.createEl('td', { text: fmt(total - spent, currency), attr: { 'data-label': 'Remaining' } });
+    tr.createEl('td', { text: fmt(total, currency),         attr: { 'data-label': 'Total' } });
   });
-  const tTotal = rows.reduce((s, r) => s + r.total, 0);
-  const tSpent = rows.reduce((s, r) => s + r.spent, 0);
+  if (unplannedTotal > 0) {
+    const tr = tbody.createEl('tr');
+    tr.createEl('td', { text: 'Unplanned' });
+    tr.createEl('td', { text: '—', attr: { colspan: '2' } });
+    tr.createEl('td', { text: fmt(unplannedTotal, currency) });
+  }
+  const tTotal = rows.reduce((s, r) => s + r.total, 0) + unplannedTotal;
+  const tSpent = rows.reduce((s, r) => s + r.spent, 0) + unplannedTotal;
   const tfr    = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)]
+  ['Total', fmt(tSpent, currency), fmt(tTotal - tSpent, currency), fmt(tTotal, currency)]
     .forEach(val => tfr.createEl('td', { text: val }));
 }
 

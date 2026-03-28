@@ -5,12 +5,14 @@ export interface ThriftLensSettings {
   currencySymbol: string;
   dataFolder:     string;
   defaultView:    'monthly' | 'annual';
+  exportMonth:    'previous' | 'current';
 }
 
 export const DEFAULT_SETTINGS: ThriftLensSettings = {
   currencySymbol: '€',
   dataFolder:     'thriftLens',
   defaultView:    'monthly',
+  exportMonth:    'previous',
 };
 
 export class ThriftLensSettingTab extends PluginSettingTab {
@@ -56,6 +58,18 @@ export class ThriftLensSettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.defaultView)
         .onChange(async value => {
           this.plugin.settings.defaultView = value as 'monthly' | 'annual';
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Export report month')
+      .setDesc('Which month the exported report covers.')
+      .addDropdown(drop => drop
+        .addOption('previous', 'Previous month (complete)')
+        .addOption('current',  'Current month (partial)')
+        .setValue(this.plugin.settings.exportMonth)
+        .onChange(async value => {
+          this.plugin.settings.exportMonth = value as 'previous' | 'current';
           await this.plugin.saveSettings();
         }));
   }

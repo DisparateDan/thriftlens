@@ -73,9 +73,12 @@ export default class ThriftLensPlugin extends Plugin {
   }
 
   private async exportReport(): Promise<void> {
-    const now    = new Date();
-    const year   = now.getFullYear();
-    const month  = now.getMonth();
+    const now   = new Date();
+    const d     = this.settings.exportMonth === 'previous'
+      ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      : now;
+    const year  = d.getFullYear();
+    const month = d.getMonth();
     const folder = this.settings.dataFolder;
     const currency = this.settings.currencySymbol;
 

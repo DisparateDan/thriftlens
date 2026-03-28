@@ -71,6 +71,7 @@ const CSS = `
   }
   .section--blue   { border-left: 3px solid rgba(100,140,220,0.7); }
   .section--purple { border-left: 3px solid rgba(160,100,220,0.7); }
+  .section--green  { border-left: 3px solid rgba(80,180,120,0.7); }
   .section--red    { border-left: 3px solid rgba(220,80,80,0.7); }
   .subsection-label {
     font-size: 0.68em;
@@ -218,7 +219,14 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
   actuals.forEach(r => { spendByCat[r.spend_category] = (spendByCat[r.spend_category] || 0) + r.amount; });
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
+  const allPlanCats        = new Set([
+    ...annualEstimates.map(r => r.spend_category),
+    ...monthlyFixeds.map(r => r.spend_category),
+  ]);
   const exceptionalTotal = exceptionals.reduce((s, r) => s + r.amount, 0);
+  const unplannedTotal   = actuals
+    .filter(r => !allPlanCats.has(r.spend_category))
+    .reduce((s, r) => s + r.amount, 0);
 
   const rows = [
     {
@@ -238,33 +246,36 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
     }] : []),
   ];
 
-  const tTotal = rows.reduce((s, r) => s + r.total, 0);
-  const tSpent = rows.reduce((s, r) => s + r.spent, 0);
+  const tTotal = rows.reduce((s, r) => s + r.total, 0) + unplannedTotal;
+  const tSpent = rows.reduce((s, r) => s + r.spent, 0) + unplannedTotal;
 
   const summaryRows = rows.map(r => [
-    r.label, fmt(r.total, currency), fmt(r.spent, currency), fmt(r.total - r.spent, currency),
+    r.label, fmt(r.spent, currency), fmt(r.total - r.spent, currency), fmt(r.total, currency),
   ]);
+  if (unplannedTotal > 0) {
+    summaryRows.push(['Unplanned', '', '', fmt(unplannedTotal, currency)]);
+  }
   const annualSummaryTable = dataTable(
-    ['Category', 'Total', 'Spend to date', 'Remaining'],
+    ['Category', 'Spend to date', 'Remaining', 'Total'],
     summaryRows,
-    ['Total', fmt(tTotal, currency), fmt(tSpent, currency), fmt(tTotal - tSpent, currency)],
+    ['Total', fmt(tSpent, currency), fmt(tTotal - tSpent, currency), fmt(tTotal, currency)],
   );
 
   // Annual estimate detail
   const annualDetailRows = annualEstimates.map(r => {
     const total = annualValue(r, year);
     const spent = spendByCat[r.spend_category] || 0;
-    return [fmtCat(r.spend_category), fmt(total, currency), spent ? fmt(spent, currency) : '—', fmt(total - spent, currency)];
+    return [r.description, spent ? fmt(spent, currency) : '—', fmt(total - spent, currency), fmt(total, currency)];
   });
 
   // Monthly fixed detail
   const monthlyDetailRows = monthlyFixeds.map(r => {
     const total = annualValue(r, year);
     const spent = r.amount * monthsToDate(r, year);
-    return [fmtCat(r.spend_category), fmt(total, currency), fmt(spent, currency), fmt(total - spent, currency)];
+    return [r.description, fmt(spent, currency), fmt(total - spent, currency), fmt(total, currency)];
   });
 
-  const detailHeaders = ['Category', 'Total', 'Spend to date', 'Remaining'];
+  const detailHeaders = ['Category', 'Spend to date', 'Remaining', 'Total'];
 
   const exceptionalRows = exceptionals.map(r => [
     r.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -279,6 +290,27 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
       ${dataTable(['Date', 'Description', 'Category', 'Amount'], exceptionalRows, ['', '', 'Total', fmt(exceptionalTotal, currency)])}
     </div>` : '';
 
+  const unplannedByCat = new Map<string, { total: number; count: number }>();
+  for (const r of actuals) {
+    if (!allPlanCats.has(r.spend_category)) {
+      const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
+      entry.total += r.amount;
+      entry.count += 1;
+      unplannedByCat.set(r.spend_category, entry);
+    }
+  }
+  const unplannedSection = unplannedByCat.size > 0 ? `
+    <div class="section section--green">
+      <p class="section-title">Unplanned spending</p>
+      ${dataTable(
+        ['Category', 'Transactions', 'Spend to date'],
+        [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0])).map(([cat, { total, count }]) => [
+          fmtCat(cat), String(count), fmt(total, currency),
+        ]),
+        ['Total', '', fmt(unplannedTotal, currency)],
+      )}
+    </div>` : '';
+
   return `
     <div class="section section--blue">
       <p class="section-title">${year} — Annual Summary</p>
@@ -290,6 +322,7 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
       <p class="section-title">Monthly planned breakdown</p>
       ${dataTable(detailHeaders, monthlyDetailRows)}
     </div>
+    ${unplannedSection}
     ${exceptionalSection}`;
 }
 

@@ -123,9 +123,37 @@
   .tl-dashboard .tl-annual-summary-table tbody {
     display: block;
   }
-  .tl-dashboard .tl-annual-summary-table thead,
-  .tl-dashboard .tl-annual-summary-table tfoot {
+  .tl-dashboard .tl-annual-summary-table thead {
     display: none;
+  }
+  .tl-dashboard .tl-annual-summary-table tfoot {
+    display: block;
+    border-top: 2px solid var(--background-modifier-border);
+    padding: 0.75em 0 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tfoot tr {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .tl-dashboard .tl-annual-summary-table tfoot td {
+    display: none;
+    padding: 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tfoot td:first-child {
+    display: block;
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+  }
+  .tl-dashboard .tl-annual-summary-table tfoot td:last-child {
+    display: block;
+    font-size: 1.25em;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-accent);
   }
   .tl-dashboard .tl-annual-summary-table tbody tr {
     display: block;
@@ -169,8 +197,8 @@
   }
 
   /* ── Annual detail table: hide Remaining Commitment column ── */
-  .tl-dashboard .tl-detail-table th:nth-child(4),
-  .tl-dashboard .tl-detail-table td:nth-child(4) {
+  .tl-dashboard .tl-detail-table th:nth-child(3),
+  .tl-dashboard .tl-detail-table td:nth-child(3) {
     display: none;
   }
 }
