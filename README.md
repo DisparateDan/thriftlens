@@ -36,7 +36,7 @@ Every entry in ThriftLens is one of four things:
 
 ![Monthly view](docs/thriftlens_month.png)
 
-**Annual view** shows the full year: the total committed baseline versus total actual spend, broken down by category. Annual commitments are matched against actuals by `spend_category`. Monthly planned spend-to-date is computed as amount × months elapsed – no transaction matching needed. This is where you see whether your commitments are holding and how the year is tracking overall.
+**Annual view** shows the full year: the total committed baseline versus total actual spend, broken down by category. Annual commitments are matched against actuals by `spend_category`. Monthly planned spend-to-date is computed as amount × months elapsed – no transaction matching needed. Unplanned spend – actual transactions with no matching plan entry – appears in its own section and is included in the grand total. This is where you see whether your commitments are holding and how the year is tracking overall.
 
 ![Annual view](docs/thriftlens_annual.png)
 
@@ -188,7 +188,7 @@ The year label in the monthly and annual nav bars, and each year heading in the 
 
 **Export to CSV** – exports all entries from a register to a CSV file in the data folder.
 
-**Export report** – generates a self-contained HTML report for the current month and year, written to `thriftLens/exports/`.
+**Export report** – generates a self-contained HTML report written to `thriftLens/exports/`. The month reported is controlled by the Export report month setting.
 
 ### Settings
 
@@ -196,7 +196,8 @@ The year label in the monthly and annual nav bars, and each year heading in the 
 |---|---|---|
 | Currency symbol | `€` | Displayed in the dashboard; not stored in data files |
 | Data folder | `thriftLens` | Folder within the vault containing register files |
-| Default view | `monthly` | Which tab opens when the dashboard is first shown |
+| Default view | `Monthly` | Which tab opens when the dashboard is first shown |
+| Export report month | `Previous month (complete)` | Whether the exported report covers the previous complete month or the current partial month |
 
 ---
 
