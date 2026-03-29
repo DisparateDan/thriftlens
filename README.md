@@ -32,11 +32,11 @@ Every entry in ThriftLens is one of four things:
 
 ### The three views
 
-**Monthly view** shows the current month: what is committed this month (the monthly share of annual commitments, and planned costs for the month), and what has actually been spent. It gives you a running picture of the month – how much is locked in, how much is paid.
+**Monthly view** shows the current month: what is committed this month (the monthly share of annual commitments, and planned costs for the month), and what has actually been spent. It gives you a running picture of the month – how much is locked in, how much is paid. The monthly share figure is expandable: click it to see how it breaks down across your annual commitment categories.
 
 ![Monthly view](docs/thriftlens_month.png)
 
-**Annual view** shows the full year: the total committed baseline versus total actual spend, broken down by category. Annual commitments are matched against actuals by `spend_category`. Monthly planned spend-to-date is computed as amount × months elapsed – no transaction matching needed. Unplanned spend – actual transactions with no matching plan entry – appears in its own section and is included in the grand total. This is where you see whether your commitments are holding and how the year is tracking overall.
+**Annual view** shows the full year: the total committed baseline versus total actual spend, broken down by category. Annual commitments are matched against actuals by `spend_category`. Monthly planned spend-to-date is computed as amount × months elapsed – no transaction matching needed. Unplanned spend – actual transactions with no matching `annual_estimate` entry – appears in its own section and is included in the grand total. This is where you see whether your commitments are holding and how the year is tracking overall.
 
 ![Annual view](docs/thriftlens_annual.png)
 
@@ -46,15 +46,17 @@ Every entry in ThriftLens is one of four things:
 
 ### Spend categories
 
-Every entry carries a `spend_category` slug (e.g. `rent`, `heating`, `driving`). This is the join key that connects planned and actual records for the same cost. It enables the dashboard to:
+Every entry carries a `spend_category` (e.g. `rent`, `heating`, `subscriptions`). **A category is a planning unit that links similar spending to plans, not a grouping label.** It enables the dashboard to:
 
-- Show actual spend for a category against its planned commitment
+- Match actual spend against `annual_estimate` entries by category to show spend-to-date
 - Pre-fill next year's annual commitment amounts from this year's actuals for the same category
 - Group and subtotal meaningfully without fuzzy description matching
 
-Multiple plan records can share a `spend_category` to form a bucket – for example, several driving costs (insurance, road tax, servicing) all tagged `driving`. In the annual view, the bucket shows a combined total with an expandable row revealing the individual entries underneath.
+Multiple plan records can share a `spend_category` — for example, several subscriptions all tagged `subscriptions`. In the annual view, the group shows a combined total with an expandable row revealing the individual entries underneath.
 
-**Choosing a category slug:** pick a slug that reflects the *planning behaviour* of the entry, not just its real-world meaning. A Nespresso subscription is fixed and known every month – it may belong in `subscriptions` even though the coffee itself is groceries. The description carries the semantic label; the category carries the planning grouping.
+Only `annual_estimate` categories absorb actuals into planned tracking. `monthly_fixed` entries do not — actuals with the same category as a monthly fixed cost still appear in the unplanned averages section. This means a category can appear in both the planned and unplanned sections simultaneously, which is intentional.
+
+**Choosing a category:** use a category that reflects how you *plan* for the expense, not just its real-world label. Avoid broad umbrella categories — use them for expenses you would genuinely budget together. The description carries the semantic label; the category carries the planning intent.
 
 ---
 
