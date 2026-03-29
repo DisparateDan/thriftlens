@@ -85,8 +85,8 @@ export class AddEntryModal extends Modal {
 
     // Spend category with datalist
     const catSetting = new Setting(contentEl)
-      .setName('Spend category')
-      .setDesc('Lowercase slug, e.g. groceries or heating_oil');
+      .setName('Category')
+      .setDesc('A category is a planning unit that links similar spending to plans, not a grouping label');
     catSetting.addText(t => {
       t.setPlaceholder('e.g. groceries')
         .onChange(v => { this.form.spend_category = v.trim().toLowerCase(); });

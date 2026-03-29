@@ -375,15 +375,6 @@
   margin: 0;
 }
 
-.tl-dashboard .tl-slug-warning {
-  font-size: 0.82em;
-  color: var(--text-muted);
-  background: rgba(200, 140, 40, 0.08);
-  border-left: 3px solid rgba(200, 140, 40, 0.5);
-  padding: 0.4em 0.75em;
-  margin-top: 0.75em;
-  border-radius: 0 4px 4px 0;
-}
 
 .tl-dashboard .tl-section-header {
   margin-bottom: 0.85em;
@@ -431,6 +422,24 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   border-bottom: none;
+}
+
+/* ─── Expandable summary card ──────────────────────────────────── */
+
+.tl-dashboard .tl-card--expandable {
+  cursor: pointer;
+}
+
+.tl-dashboard .tl-card-chevron {
+  font-size: 0.55em;
+  display: inline-block;
+  transition: transform 0.2s ease;
+  margin-right: 0.25em;
+  vertical-align: middle;
+}
+
+.tl-dashboard .tl-card--expanded .tl-card-value-row .tl-card-chevron {
+  transform: rotate(90deg);
 }
 
 /* ─── Annual summary table ─────────────────────────────────────── */

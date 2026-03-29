@@ -32,7 +32,7 @@ year: 2026
 | `date` | `YYYY-MM-DD` — transaction date for `actual_spend`; conventionally `YYYY-01-01` for plan entries |
 | `amount` | numeric (no currency symbol) — monthly amount for `monthly_fixed`; full-year amount for `annual_estimate` |
 | `spend_type` | `monthly_fixed` \| `annual_estimate` \| `actual_spend` |
-| `spend_category` | short slug grouping related records (e.g. `heating`, `rent`, `driving`) |
+| `spend_category` | planning unit linking related records (e.g. `heating`, `rent`, `subscriptions`) — not a display grouping |
 | `description` | free text label |
 | `valid_until` | `YYYY-MM-DD` — optional; `monthly_fixed` only; marks a mid-year expiry |
 
@@ -54,13 +54,12 @@ Monthly fixed spend-to-date is computed as `amount × months_elapsed` — no act
 
 ### spend_category
 
-Every record carries a `spend_category` slug. This is the join key between planned and actual records:
+Every record carries a `spend_category`. This is the planning unit — the join key between planned and actual records. **A category is a planning unit that links similar spending to plans, not a grouping label.** Avoid broad umbrella categories; use them for expenses you would genuinely budget together.
 
-- Multiple plan records can share a `spend_category` to form a bucket (e.g. several `driving` costs). The annual view shows a combined total with an expandable row.
-- `annual_estimate` actuals are matched by `spend_category` to compute spend-to-date.
+- Multiple plan records can share a `spend_category` (e.g. several `subscriptions` costs). The annual view shows a combined total.
+- Only `annual_estimate` categories absorb actuals — actuals matching an `annual_estimate` slug are tracked against that budget and excluded from unplanned averages.
+- `monthly_fixed` categories do NOT absorb actuals — actuals with the same slug still appear in unplanned averages.
 - Carry-forward seeds `annual_estimate` amounts from the prior year's `actual_spend` total for the same `spend_category`.
-- Choose slugs by **planning behaviour**, not real-world meaning. A fixed monthly coffee subscription belongs in `subscriptions`, not `groceries`, if you want grocery actuals to appear as unplanned.
-- **A slug used by any plan entry absorbs all actuals under that slug into planned tracking.** Those actuals will not appear in the unplanned averages section. If an `actual_spend` category shares a slug with a `monthly_fixed` or `annual_estimate`, give it its own slug to keep it in unplanned tracking. The UI shows a warning when absorbed actuals are detected.
 
 ### Carry-forward behaviour
 

@@ -88,6 +88,57 @@ export function renderMonthSpendList(
     });
 }
 
+function renderMonthAnnualBreakdown(
+  container: HTMLElement,
+  records: BudgetEntry[],
+  year: number,
+  month: number,
+  currency: string,
+): void {
+  container.empty();
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
+  if (annualEstimates.length === 0) return;
+
+  const byCategory = new Map<string, BudgetEntry[]>();
+  for (const r of annualEstimates) {
+    if (!byCategory.has(r.spend_category)) byCategory.set(r.spend_category, []);
+    byCategory.get(r.spend_category)!.push(r);
+  }
+
+  const table = container.createEl('table', { cls: 'tl-table tl-detail-table' });
+  const hr = table.createEl('thead').createEl('tr');
+  ['Category', 'Monthly share'].forEach(h => hr.createEl('th', { text: h }));
+  const tbody = table.createEl('tbody');
+
+  for (const [cat, entries] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
+    const total      = entries.reduce((s, r) => s + monthlyValue(r, year, month), 0);
+    const expandable = entries.length > 1;
+
+    const tr = tbody.createEl('tr', { cls: expandable ? 'tl-detail-row tl-detail-row--expandable' : 'tl-detail-row' });
+    const catCell = tr.createEl('td');
+    if (expandable) catCell.createEl('span', { text: '▶', cls: 'tl-chevron' });
+    catCell.createEl('span', { text: fmtCat(cat) });
+    tr.createEl('td', { text: fmt(total, currency) });
+
+    if (expandable) {
+      const subRows = [...entries]
+        .sort((a, b) => a.description.localeCompare(b.description))
+        .map(r => {
+          const sub = tbody.createEl('tr', { cls: 'tl-detail-sub' });
+          sub.createEl('td', { text: r.description, cls: 'tl-detail-sub-desc' });
+          sub.createEl('td', { text: fmt(monthlyValue(r, year, month), currency) });
+          return sub;
+        });
+
+      tr.addEventListener('click', () => {
+        const expanding = !tr.hasClass('tl-detail-row--expanded');
+        tr.toggleClass('tl-detail-row--expanded', expanding);
+        subRows.forEach(s => s.toggleClass('tl-detail-sub--visible', expanding));
+      });
+    }
+  }
+}
+
 // Returns true if any unplanned categories were rendered, false if none.
 export function renderMonthUnplannedAverages(
   container: HTMLElement,
@@ -98,25 +149,18 @@ export function renderMonthUnplannedAverages(
   container.empty();
 
   const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
-  const monthlyFixeds   = records.filter(r => r.spend_type === 'monthly_fixed');
   const actuals         = records.filter(r => r.spend_type === 'actual_spend');
 
-  const allPlanCats = new Set([
-    ...annualEstimates.map(r => r.spend_category),
-    ...monthlyFixeds.map(r => r.spend_category),
-  ]);
+  const allPlanCats = new Set(annualEstimates.map(r => r.spend_category));
 
   const unplannedByCat = new Map<string, number>();
-  const absorbedSlugs  = new Set<string>();
   for (const r of actuals) {
     if (!allPlanCats.has(r.spend_category)) {
       unplannedByCat.set(r.spend_category, (unplannedByCat.get(r.spend_category) ?? 0) + r.amount);
-    } else {
-      absorbedSlugs.add(r.spend_category);
     }
   }
 
-  if (unplannedByCat.size === 0 && absorbedSlugs.size === 0) return false;
+  if (unplannedByCat.size === 0) return false;
 
   if (unplannedByCat.size > 0) {
     const elapsed = monthsElapsedInYear(year);
@@ -138,13 +182,6 @@ export function renderMonthUnplannedAverages(
     ['Total', fmt(grandTotal, currency), fmt(grandAvg, currency)].forEach(v => tfr.createEl('td', { text: v }));
   }
 
-  if (absorbedSlugs.size > 0) {
-    const slugList = [...absorbedSlugs].sort().map(fmtCat).join(', ');
-    container.createEl('p', {
-      cls:  'tl-slug-warning',
-      text: `Actuals in ${slugList} share a category with a planned entry and are tracked there — they won't appear here.`,
-    });
-  }
 
   return true;
 }
@@ -184,6 +221,26 @@ export function renderMonth(
     { label: 'Spend this month',   value: fmt(totalSpent, currency)         },
     { label: 'Total',              value: fmt(annualInstallment + fixedCosts + totalSpent, currency) },
   ]);
+
+  if (annualEstimates.length > 0) {
+    const breakdownEl = cardsContainer.createEl('div', { cls: 'tl-hidden' });
+    renderMonthAnnualBreakdown(breakdownEl, records, year, month, currency);
+
+    const firstTd = cardsContainer.querySelector('tbody td') as HTMLElement | null;
+    if (firstTd) {
+      const currentText = firstTd.textContent ?? '';
+      firstTd.empty();
+      firstTd.addClass('tl-card--expandable');
+      const valueRow = firstTd.createEl('span', { cls: 'tl-card-value-row' });
+      valueRow.createEl('span', { text: '▶ ', cls: 'tl-card-chevron' });
+      valueRow.createEl('span', { text: currentText });
+      firstTd.onclick = () => {
+        const willExpand = breakdownEl.hasClass('tl-hidden');
+        breakdownEl.toggleClass('tl-hidden', !willExpand);
+        firstTd.toggleClass('tl-card--expanded', willExpand);
+      };
+    }
+  }
 
   renderMonthSpendList(spendContainer, monthSpend, currency);
 }
@@ -262,10 +319,7 @@ function renderAnnualSummaryTable(
   const exceptionals  = records.filter(r => r.spend_type === 'exceptional');
 
   const annualEstimateCats = new Set(annualEstimates.map(r => r.spend_category));
-  const allPlanCats        = new Set([
-    ...annualEstimates.map(r => r.spend_category),
-    ...monthlyFixeds.map(r => r.spend_category),
-  ]);
+  const allPlanCats        = annualEstimateCats;
   const unplannedTotal = actuals
     .filter(r => !allPlanCats.has(r.spend_category))
     .reduce((s, r) => s + r.amount, 0);
@@ -385,20 +439,14 @@ export function renderAnnual(
   );
 
   // Unplanned: actuals with no plan counterpart
-  const allPlanCats = new Set([
-    ...annualEstimates.map(r => r.spend_category),
-    ...monthlyFixeds.map(r => r.spend_category),
-  ]);
+  const allPlanCats = new Set(annualEstimates.map(r => r.spend_category));
   const unplannedByCat = new Map<string, { total: number; count: number }>();
-  const absorbedSlugs  = new Set<string>();
   for (const r of actuals) {
     if (!allPlanCats.has(r.spend_category)) {
       const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
       entry.total += r.amount;
       entry.count += 1;
       unplannedByCat.set(r.spend_category, entry);
-    } else {
-      absorbedSlugs.add(r.spend_category);
     }
   }
 
@@ -428,13 +476,6 @@ export function renderAnnual(
     greenContainer.createEl('p', { text: 'No unplanned spend this year.', cls: 'tl-empty' });
   }
 
-  if (absorbedSlugs.size > 0) {
-    const slugList = [...absorbedSlugs].sort().map(fmtCat).join(', ');
-    greenContainer.createEl('p', {
-      cls:  'tl-slug-warning',
-      text: `Actuals in ${slugList} share a category with a planned entry and are tracked there — they won't appear here.`,
-    });
-  }
 
   // Exceptional spend
   if (exceptionals.length > 0) {

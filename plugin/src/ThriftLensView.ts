@@ -35,8 +35,8 @@ export class ThriftLensView extends ItemView {
   private yoyOuter!:          HTMLElement;
   private yoyContent!:        HTMLElement;
   private dayInfoEl!:         HTMLElement;
-  private cardsContent!:      HTMLElement;
-  private commitContent!:     HTMLElement;
+  private cardsContent!:  HTMLElement;
+  private commitContent!: HTMLElement;
   private spendContent!:      HTMLElement;
   private monthUnplannedSection!: HTMLElement;
   private monthUnplannedContent!: HTMLElement;
