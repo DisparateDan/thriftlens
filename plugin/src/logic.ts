@@ -63,6 +63,15 @@ export function spendInMonth(records: BudgetEntry[], year: number, month: number
   );
 }
 
+// Number of months elapsed in a given year up to the current date (1–12).
+// Returns 12 for any past year, 0 for future years.
+export function monthsElapsedInYear(year: number): number {
+  const now = new Date();
+  if (year > now.getFullYear()) return 0;
+  if (year < now.getFullYear()) return 12;
+  return now.getMonth() + 1;
+}
+
 export function fmt(n: number, currencySymbol: string): string {
   return currencySymbol + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }

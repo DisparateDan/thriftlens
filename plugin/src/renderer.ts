@@ -1,6 +1,6 @@
 import type { BudgetEntry } from './types';
 import {
-  monthlyValue, annualValue, monthsToDate,
+  monthlyValue, annualValue, monthsToDate, monthsElapsedInYear,
   spendInMonth,
   fmt, fmtCat,
 } from './logic';
@@ -86,6 +86,67 @@ export function renderMonthSpendList(
       tr.createEl('td', { text: fmtCat(r.spend_category) });
       tr.createEl('td', { text: fmt(r.amount, currency) });
     });
+}
+
+// Returns true if any unplanned categories were rendered, false if none.
+export function renderMonthUnplannedAverages(
+  container: HTMLElement,
+  records: BudgetEntry[],
+  year: number,
+  currency: string,
+): boolean {
+  container.empty();
+
+  const annualEstimates = records.filter(r => r.spend_type === 'annual_estimate');
+  const monthlyFixeds   = records.filter(r => r.spend_type === 'monthly_fixed');
+  const actuals         = records.filter(r => r.spend_type === 'actual_spend');
+
+  const allPlanCats = new Set([
+    ...annualEstimates.map(r => r.spend_category),
+    ...monthlyFixeds.map(r => r.spend_category),
+  ]);
+
+  const unplannedByCat = new Map<string, number>();
+  const absorbedSlugs  = new Set<string>();
+  for (const r of actuals) {
+    if (!allPlanCats.has(r.spend_category)) {
+      unplannedByCat.set(r.spend_category, (unplannedByCat.get(r.spend_category) ?? 0) + r.amount);
+    } else {
+      absorbedSlugs.add(r.spend_category);
+    }
+  }
+
+  if (unplannedByCat.size === 0 && absorbedSlugs.size === 0) return false;
+
+  if (unplannedByCat.size > 0) {
+    const elapsed = monthsElapsedInYear(year);
+    const table   = container.createEl('table', { cls: 'tl-table' });
+    const hr      = table.createEl('thead').createEl('tr');
+    ['Category', 'Spend to date', 'Monthly avg'].forEach(h => hr.createEl('th', { text: h }));
+    const tbody = table.createEl('tbody');
+    let grandTotal = 0;
+    for (const [cat, total] of [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0]))) {
+      grandTotal += total;
+      const avg = elapsed > 0 ? total / elapsed : 0;
+      const tr  = tbody.createEl('tr');
+      tr.createEl('td', { text: fmtCat(cat) });
+      tr.createEl('td', { text: fmt(total, currency) });
+      tr.createEl('td', { text: fmt(avg, currency) });
+    }
+    const tfr    = table.createEl('tfoot').createEl('tr');
+    const grandAvg = elapsed > 0 ? grandTotal / elapsed : 0;
+    ['Total', fmt(grandTotal, currency), fmt(grandAvg, currency)].forEach(v => tfr.createEl('td', { text: v }));
+  }
+
+  if (absorbedSlugs.size > 0) {
+    const slugList = [...absorbedSlugs].sort().map(fmtCat).join(', ');
+    container.createEl('p', {
+      cls:  'tl-slug-warning',
+      text: `Actuals in ${slugList} share a category with a planned entry and are tracked there — they won't appear here.`,
+    });
+  }
+
+  return true;
 }
 
 export function renderMonth(
@@ -329,32 +390,50 @@ export function renderAnnual(
     ...monthlyFixeds.map(r => r.spend_category),
   ]);
   const unplannedByCat = new Map<string, { total: number; count: number }>();
+  const absorbedSlugs  = new Set<string>();
   for (const r of actuals) {
     if (!allPlanCats.has(r.spend_category)) {
       const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
       entry.total += r.amount;
       entry.count += 1;
       unplannedByCat.set(r.spend_category, entry);
+    } else {
+      absorbedSlugs.add(r.spend_category);
     }
   }
 
   if (unplannedByCat.size > 0) {
-    const table = greenContainer.createEl('table', { cls: 'tl-table' });
-    const hr    = table.createEl('thead').createEl('tr');
-    ['Category', 'Transactions', 'Spend to date'].forEach(h => hr.createEl('th', { text: h }));
+    const elapsed = monthsElapsedInYear(year);
+    const table   = greenContainer.createEl('table', { cls: 'tl-table' });
+    const hr      = table.createEl('thead').createEl('tr');
+    ['Category', 'Transactions', 'Spend to date', 'Monthly avg', 'Projected annual'].forEach(h => hr.createEl('th', { text: h }));
     const tbody = table.createEl('tbody');
     let grandTotal = 0;
     for (const [cat, { total, count }] of [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0]))) {
       grandTotal += total;
+      const avg       = elapsed > 0 ? total / elapsed : 0;
+      const projected = avg * 12;
       const tr = tbody.createEl('tr');
       tr.createEl('td', { text: fmtCat(cat) });
       tr.createEl('td', { text: String(count) });
       tr.createEl('td', { text: fmt(total, currency) });
+      tr.createEl('td', { text: fmt(avg, currency) });
+      tr.createEl('td', { text: fmt(projected, currency) });
     }
+    const grandAvg       = elapsed > 0 ? grandTotal / elapsed : 0;
+    const grandProjected = grandAvg * 12;
     const tfr = table.createEl('tfoot').createEl('tr');
-    ['Total', '', fmt(grandTotal, currency)].forEach(v => tfr.createEl('td', { text: v }));
+    ['Total', '', fmt(grandTotal, currency), fmt(grandAvg, currency), fmt(grandProjected, currency)].forEach(v => tfr.createEl('td', { text: v }));
   } else {
     greenContainer.createEl('p', { text: 'No unplanned spend this year.', cls: 'tl-empty' });
+  }
+
+  if (absorbedSlugs.size > 0) {
+    const slugList = [...absorbedSlugs].sort().map(fmtCat).join(', ');
+    greenContainer.createEl('p', {
+      cls:  'tl-slug-warning',
+      text: `Actuals in ${slugList} share a category with a planned entry and are tracked there — they won't appear here.`,
+    });
   }
 
   // Exceptional spend

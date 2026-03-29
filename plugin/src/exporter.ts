@@ -1,6 +1,6 @@
 import type { BudgetEntry } from './types';
 import {
-  monthlyValue, annualValue, monthsToDate,
+  monthlyValue, annualValue, monthsToDate, monthsElapsedInYear,
   spendInMonth,
   fmt, fmtCat, MONTH_NAMES,
 } from './logic';
@@ -197,6 +197,43 @@ function renderMonthlySection(
     ? `<p class="subsection-label">Transactions</p>${dataTable(['Date', 'Description', 'Category', 'Amount'], txRows)}`
     : '';
 
+  // Unplanned averages
+  const annualEstimatesForUnplanned = records.filter(r => r.spend_type === 'annual_estimate');
+  const allPlanCats = new Set([
+    ...annualEstimatesForUnplanned.map(r => r.spend_category),
+    ...monthlyFixeds.map(r => r.spend_category),
+  ]);
+  const unplannedByCat = new Map<string, number>();
+  const absorbedSlugsMonthly = new Set<string>();
+  for (const r of records.filter(r => r.spend_type === 'actual_spend')) {
+    if (!allPlanCats.has(r.spend_category)) {
+      unplannedByCat.set(r.spend_category, (unplannedByCat.get(r.spend_category) ?? 0) + r.amount);
+    } else {
+      absorbedSlugsMonthly.add(r.spend_category);
+    }
+  }
+  const elapsed = monthsElapsedInYear(year);
+  const absorbedWarningMonthly = absorbedSlugsMonthly.size > 0
+    ? `<p style="font-size:0.82em;color:#888;background:rgba(200,140,40,0.08);border-left:3px solid rgba(200,140,40,0.5);padding:0.4em 0.75em;margin-top:0.75em;border-radius:0 4px 4px 0">Actuals in ${[...absorbedSlugsMonthly].sort().map(fmtCat).join(', ')} share a category with a planned entry and are tracked there — they won't appear here.</p>`
+    : '';
+  const unplannedAvgSection = (unplannedByCat.size > 0 || absorbedSlugsMonthly.size > 0) ? `
+    <div class="section section--green">
+      <p class="section-title">Unplanned spend — running averages</p>
+      ${unplannedByCat.size > 0 ? dataTable(
+        ['Category', 'Spend to date', 'Monthly avg'],
+        [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0])).map(([cat, total]) => {
+          const avg = elapsed > 0 ? total / elapsed : 0;
+          return [fmtCat(cat), fmt(total, currency), fmt(avg, currency)];
+        }),
+        (() => {
+          const grandTotal = [...unplannedByCat.values()].reduce((s, v) => s + v, 0);
+          const grandAvg   = elapsed > 0 ? grandTotal / elapsed : 0;
+          return ['Total', fmt(grandTotal, currency), fmt(grandAvg, currency)];
+        })(),
+      ) : ''}
+      ${absorbedWarningMonthly}
+    </div>` : '';
+
   return `
     <div class="section section--blue">
       <p class="section-title">${MONTH_NAMES[month]} ${year}</p>
@@ -204,7 +241,8 @@ function renderMonthlySection(
       <p class="subsection-label">Planned costs breakdown</p>
       ${fixedTable}
       ${txSection}
-    </div>`;
+    </div>
+    ${unplannedAvgSection}`;
 }
 
 // ── Annual section ────────────────────────────────────────────────
@@ -290,25 +328,34 @@ function renderAnnualSection(records: BudgetEntry[], year: number, currency: str
       ${dataTable(['Date', 'Description', 'Category', 'Amount'], exceptionalRows, ['', '', 'Total', fmt(exceptionalTotal, currency)])}
     </div>` : '';
 
-  const unplannedByCat = new Map<string, { total: number; count: number }>();
+  const unplannedByCat  = new Map<string, { total: number; count: number }>();
+  const absorbedSlugsAnnual = new Set<string>();
   for (const r of actuals) {
     if (!allPlanCats.has(r.spend_category)) {
       const entry = unplannedByCat.get(r.spend_category) ?? { total: 0, count: 0 };
       entry.total += r.amount;
       entry.count += 1;
       unplannedByCat.set(r.spend_category, entry);
+    } else {
+      absorbedSlugsAnnual.add(r.spend_category);
     }
   }
-  const unplannedSection = unplannedByCat.size > 0 ? `
+  const elapsed = monthsElapsedInYear(year);
+  const absorbedWarningAnnual = absorbedSlugsAnnual.size > 0
+    ? `<p style="font-size:0.82em;color:#888;background:rgba(200,140,40,0.08);border-left:3px solid rgba(200,140,40,0.5);padding:0.4em 0.75em;margin-top:0.75em;border-radius:0 4px 4px 0">Actuals in ${[...absorbedSlugsAnnual].sort().map(fmtCat).join(', ')} share a category with a planned entry and are tracked there — they won't appear here.</p>`
+    : '';
+  const unplannedSection = (unplannedByCat.size > 0 || absorbedSlugsAnnual.size > 0) ? `
     <div class="section section--green">
       <p class="section-title">Unplanned spending</p>
-      ${dataTable(
-        ['Category', 'Transactions', 'Spend to date'],
-        [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0])).map(([cat, { total, count }]) => [
-          fmtCat(cat), String(count), fmt(total, currency),
-        ]),
-        ['Total', '', fmt(unplannedTotal, currency)],
-      )}
+      ${unplannedByCat.size > 0 ? dataTable(
+        ['Category', 'Transactions', 'Spend to date', 'Monthly avg', 'Projected annual'],
+        [...unplannedByCat].sort((a, b) => a[0].localeCompare(b[0])).map(([cat, { total, count }]) => {
+          const avg = elapsed > 0 ? total / elapsed : 0;
+          return [fmtCat(cat), String(count), fmt(total, currency), fmt(avg, currency), fmt(avg * 12, currency)];
+        }),
+        ['Total', '', fmt(unplannedTotal, currency), fmt(elapsed > 0 ? unplannedTotal / elapsed : 0, currency), fmt(elapsed > 0 ? unplannedTotal / elapsed * 12 : 0, currency)],
+      ) : ''}
+      ${absorbedWarningAnnual}
     </div>` : '';
 
   return `

@@ -5,7 +5,7 @@ import type { BudgetEntry } from './types';
 import { MONTH_NAMES } from './logic';
 import {
   renderNavBar, renderCommitmentsTable,
-  renderMonth, renderAnnual, renderYoY,
+  renderMonth, renderMonthUnplannedAverages, renderAnnual, renderYoY,
 } from './renderer';
 import { AddEntryModal }     from './modals/AddEntryModal';
 import { CreateRecordModal } from './modals/CreateRecordModal';
@@ -38,6 +38,8 @@ export class ThriftLensView extends ItemView {
   private cardsContent!:      HTMLElement;
   private commitContent!:     HTMLElement;
   private spendContent!:      HTMLElement;
+  private monthUnplannedSection!: HTMLElement;
+  private monthUnplannedContent!: HTMLElement;
   private annualBlueContent!:   HTMLElement;
   private annualPurpleContent!: HTMLElement;
   private annualGreenContent!:  HTMLElement;
@@ -104,6 +106,11 @@ export class ThriftLensView extends ItemView {
     spendSection.createEl('div', { cls: 'tl-section-header' })
       .createEl('span', { text: 'Transactions', cls: 'tl-section-title' });
     this.spendContent = spendSection.createEl('div');
+
+    this.monthUnplannedSection = this.monthlyOuter.createEl('div', { cls: 'tl-section tl-section--green' });
+    this.monthUnplannedSection.createEl('div', { cls: 'tl-section-header' })
+      .createEl('span', { text: 'Unplanned spend — running averages', cls: 'tl-section-title' });
+    this.monthUnplannedContent = this.monthUnplannedSection.createEl('div');
 
     // ── Annual outer ───────────────────────────────────────────
     this.annualOuter = root.createEl('div', { cls: 'tl-tab-pane' });
@@ -240,6 +247,8 @@ export class ThriftLensView extends ItemView {
       );
       this.commitContent.empty();
       renderCommitmentsTable(this.commitContent, monthRecords, year, currency);
+      const hasUnplanned = renderMonthUnplannedAverages(this.monthUnplannedContent, monthRecords, year, currency);
+      this.monthUnplannedSection.toggleClass('tl-hidden', !hasUnplanned);
 
       renderAnnual(
         this.annualBlueContent, this.annualPurpleContent, this.annualGreenContent, this.annualRedContent,

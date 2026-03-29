@@ -60,6 +60,7 @@ Every record carries a `spend_category` slug. This is the join key between plann
 - `annual_estimate` actuals are matched by `spend_category` to compute spend-to-date.
 - Carry-forward seeds `annual_estimate` amounts from the prior year's `actual_spend` total for the same `spend_category`.
 - Choose slugs by **planning behaviour**, not real-world meaning. A fixed monthly coffee subscription belongs in `subscriptions`, not `groceries`, if you want grocery actuals to appear as unplanned.
+- **A slug used by any plan entry absorbs all actuals under that slug into planned tracking.** Those actuals will not appear in the unplanned averages section. If an `actual_spend` category shares a slug with a `monthly_fixed` or `annual_estimate`, give it its own slug to keep it in unplanned tracking. The UI shows a warning when absorbed actuals are detected.
 
 ### Carry-forward behaviour
 
