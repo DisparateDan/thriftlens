@@ -276,7 +276,8 @@ function renderDetailTable(
     if (expandable) catCell.createEl('span', { text: '▶', cls: 'tl-chevron' });
     catCell.createEl('span', { text: fmtCat(cat) });
     tr.createEl('td', { text: spent ? fmt(spent, currency) : '—' });
-    tr.createEl('td', { text: fmt(total - spent, currency) });
+    const remaining = total - spent;
+    tr.createEl('td', { text: fmt(remaining, currency), cls: remaining < 0 ? 'tl-overbudget' : '' });
     tr.createEl('td', { text: fmt(total, currency) });
 
     if (expandable) {
@@ -289,7 +290,8 @@ function renderDetailTable(
           if (subSpentFn) {
             const subSpent = subSpentFn(r);
             sub.createEl('td', { text: fmt(subSpent, currency) });
-            sub.createEl('td', { text: fmt(subTotal - subSpent, currency) });
+            const subRemaining = subTotal - subSpent;
+            sub.createEl('td', { text: fmt(subRemaining, currency), cls: subRemaining < 0 ? 'tl-overbudget' : '' });
           } else {
             sub.createEl('td', { text: '—' });
             sub.createEl('td', { text: '—' });
@@ -347,11 +349,12 @@ function renderAnnualSummaryTable(
   ['Category', 'Spend to date', 'Remaining commitment', 'Total'].forEach(h => hr.createEl('th', { text: h }));
   const tbody = table.createEl('tbody');
   rows.forEach(({ label, total, spent }) => {
+    const remaining = total - spent;
     const tr = tbody.createEl('tr');
     tr.createEl('td', { text: label });
-    tr.createEl('td', { text: fmt(spent, currency),         attr: { 'data-label': 'Spent' } });
-    tr.createEl('td', { text: fmt(total - spent, currency), attr: { 'data-label': 'Remaining' } });
-    tr.createEl('td', { text: fmt(total, currency),         attr: { 'data-label': 'Total' } });
+    tr.createEl('td', { text: fmt(spent, currency),       attr: { 'data-label': 'Spent' } });
+    tr.createEl('td', { text: fmt(remaining, currency),   attr: { 'data-label': 'Remaining' }, cls: remaining < 0 ? 'tl-overbudget' : '' });
+    tr.createEl('td', { text: fmt(total, currency),       attr: { 'data-label': 'Total' } });
   });
   if (unplannedTotal > 0) {
     const tr = tbody.createEl('tr');
@@ -361,9 +364,14 @@ function renderAnnualSummaryTable(
   }
   const tTotal = rows.reduce((s, r) => s + r.total, 0) + unplannedTotal;
   const tSpent = rows.reduce((s, r) => s + r.spent, 0) + unplannedTotal;
+  const tRemaining = tTotal - tSpent;
   const tfr    = table.createEl('tfoot').createEl('tr');
-  ['Total', fmt(tSpent, currency), fmt(tTotal - tSpent, currency), fmt(tTotal, currency)]
-    .forEach(val => tfr.createEl('td', { text: val }));
+  [
+    { text: 'Total' },
+    { text: fmt(tSpent, currency) },
+    { text: fmt(tRemaining, currency), cls: tRemaining < 0 ? 'tl-overbudget' : '' },
+    { text: fmt(tTotal, currency) },
+  ].forEach(({ text, cls }) => tfr.createEl('td', { text, cls }));
 }
 
 export function renderYoY(

@@ -73,7 +73,8 @@ export function monthsElapsedInYear(year: number): number {
 }
 
 export function fmt(n: number, currencySymbol: string): string {
-  return currencySymbol + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const sign = n < 0 ? '-' : '';
+  return sign + currencySymbol + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 export function fmtCat(s: string): string {

@@ -175,8 +175,8 @@ describe('fmt', () => {
     expect(fmt(0, '£')).toBe('£0.00');
   });
 
-  it('uses absolute value (no negative sign)', () => {
-    expect(fmt(-99.99, '$')).toBe('$99.99');
+  it('prefixes negative sign before currency symbol', () => {
+    expect(fmt(-99.99, '$')).toBe('-$99.99');
   });
 });
 

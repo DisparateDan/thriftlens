@@ -528,6 +528,11 @@
   display: table-row;
 }
 
+.tl-dashboard .tl-overbudget {
+  color: var(--text-error);
+  font-weight: 600;
+}
+
 .tl-dashboard .tl-detail-sub--visible td {
   background: var(--background-primary);
   color: var(--text-muted);

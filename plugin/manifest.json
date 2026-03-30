@@ -1,7 +1,7 @@
 {
   "id": "thriftlens",
   "name": "ThriftLens",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "minAppVersion": "1.4.0",
   "description": "A personal cashflow dashboard: committed spend, actuals, and cost of living shown by year and month.",
   "author": "Dan Pusceddu",
