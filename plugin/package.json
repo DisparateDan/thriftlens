@@ -1,6 +1,6 @@
 {
   "name": "thriftlens",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "ThriftLens Obsidian Plugin",
   "main": "main.js",
   "scripts": {

@@ -196,9 +196,52 @@
     color: var(--text-faint);
   }
 
+  /* ── Annual summary unplanned row: single flex line ── */
+  .tl-dashboard .tl-annual-summary-table tbody .tl-unplanned-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.75em 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody .tl-unplanned-row td:first-child {
+    display: block;
+    font-size: 0.65em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    padding: 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody .tl-unplanned-row td:nth-child(2) {
+    display: none;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody .tl-unplanned-row td:nth-child(3) {
+    display: block;
+    font-size: 1em;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 0;
+  }
+  .tl-dashboard .tl-annual-summary-table tbody .tl-unplanned-row td:nth-child(3)::before {
+    display: none;
+  }
+
   /* ── Annual detail table: hide Remaining Commitment column ── */
   .tl-dashboard .tl-detail-table th:nth-child(3),
   .tl-dashboard .tl-detail-table td:nth-child(3) {
+    display: none;
+  }
+
+  /* ── Annual unplanned table: keep only Category + Spend to date ── */
+  .tl-dashboard .tl-unplanned-table {
+    table-layout: auto;
+  }
+  .tl-dashboard .tl-unplanned-table th:nth-child(2),
+  .tl-dashboard .tl-unplanned-table td:nth-child(2),
+  .tl-dashboard .tl-unplanned-table th:nth-child(4),
+  .tl-dashboard .tl-unplanned-table td:nth-child(4),
+  .tl-dashboard .tl-unplanned-table th:nth-child(5),
+  .tl-dashboard .tl-unplanned-table td:nth-child(5) {
     display: none;
   }
 }

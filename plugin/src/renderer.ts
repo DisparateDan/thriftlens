@@ -357,7 +357,7 @@ function renderAnnualSummaryTable(
     tr.createEl('td', { text: fmt(total, currency),       attr: { 'data-label': 'Total' } });
   });
   if (unplannedTotal > 0) {
-    const tr = tbody.createEl('tr');
+    const tr = tbody.createEl('tr', { cls: 'tl-unplanned-row' });
     tr.createEl('td', { text: 'Unplanned' });
     tr.createEl('td', { text: '—', attr: { colspan: '2' } });
     tr.createEl('td', { text: fmt(unplannedTotal, currency) });
@@ -460,7 +460,7 @@ export function renderAnnual(
 
   if (unplannedByCat.size > 0) {
     const elapsed = monthsElapsedInYear(year);
-    const table   = greenContainer.createEl('table', { cls: 'tl-table' });
+    const table   = greenContainer.createEl('table', { cls: 'tl-table tl-unplanned-table' });
     const hr      = table.createEl('thead').createEl('tr');
     ['Category', 'Transactions', 'Spend to date', 'Monthly avg', 'Projected annual'].forEach(h => hr.createEl('th', { text: h }));
     const tbody = table.createEl('tbody');
